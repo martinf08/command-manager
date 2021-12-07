@@ -90,7 +90,7 @@ where
     f.render_widget(bloc, chunks[2]);
 }
 
-fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
+fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
 where
     B: Backend,
 {

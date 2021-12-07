@@ -3,11 +3,8 @@ mod ui;
 
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
-use linefeed::{Interface, ReadResult};
-use regex::Regex;
 
 use std::io;
-use std::process::Command as StdCommand;
 use std::time::Duration;
 use tui::backend::Backend;
 use tui::Terminal;
