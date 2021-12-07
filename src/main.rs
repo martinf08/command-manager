@@ -1,3 +1,4 @@
+use cm::{app::App, run_app};
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
 use crossterm::terminal::{
@@ -7,7 +8,6 @@ use std::error::Error;
 use std::io;
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
-use cm::{App, run_app, write_command_in_terminal};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // setup terminal
@@ -19,8 +19,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");
-    let app = App::init_from_history_file(history_file);
+    let _history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");
+    let app = App::new("Command Manager");
     let result = run_app(&mut terminal, app);
 
     // restore terminal
@@ -40,9 +40,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         _ => return Ok(()),
     }
-
-    // write selected input in terminal
-    write_command_in_terminal(result.unwrap().unwrap())?;
 
     Ok(())
 }
