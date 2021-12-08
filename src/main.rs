@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let _history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");
+    // let _history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");
     let app = App::new("Command Manager");
     let result = run_app(&mut terminal, app);
 
