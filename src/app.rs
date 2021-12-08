@@ -1,3 +1,4 @@
+use crate::fixtures::generate_data;
 use tui::widgets::ListState;
 
 pub struct TabsState<'a> {
@@ -63,23 +64,50 @@ impl<T> StatefulList<T> {
     pub fn unselect(&mut self) {
         self.state.select(None);
     }
+
+    pub fn current(&self) -> usize {
+        match self.state.selected() {
+            Some(i) => i,
+            None => 0,
+        }
+    }
+}
+
+pub struct CommandStates {
+    pub items: Vec<Vec<(String, String)>>,
+    pub index: usize,
+    pub state: ListState,
+}
+
+impl CommandStates {
+    pub fn new(items: Vec<Vec<(String, String)>>) -> Self {
+        CommandStates {
+            items: items.clone(),
+            index: 0,
+            state: ListState::default(),
+        }
+    }
+
+    pub fn set_position(&mut self, index: usize) {
+        self.index = index;
+    }
 }
 
 pub struct App<'a> {
     pub title: &'a str,
     pub tabs: TabsState<'a>,
     pub folders: StatefulList<String>,
+    pub commands: CommandStates,
 }
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str) -> Self {
+        let (folders, commands) = generate_data();
         App {
             title,
             tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
-            folders: StatefulList::with_items(vec![
-                "/home/user/".to_string(),
-                "/home/user/Documents/".to_string(),
-            ]),
+            folders: StatefulList::with_items(folders),
+            commands: CommandStates::new(commands),
         }
     }
 }

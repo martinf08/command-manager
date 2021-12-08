@@ -1,4 +1,5 @@
 pub mod app;
+mod fixtures;
 mod ui;
 
 use crossterm::event;

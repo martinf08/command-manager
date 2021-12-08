@@ -57,9 +57,9 @@ where
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Percentage(25),
-                Constraint::Percentage(60),
                 Constraint::Percentage(15),
+                Constraint::Percentage(75),
+                Constraint::Percentage(10),
             ]
             .as_ref(),
         )
@@ -78,16 +78,44 @@ where
         .collect::<Vec<ListItem>>();
 
     let list = List::new(items)
-        .block(Block::default().title("Commands").borders(Borders::ALL))
+        .block(Block::default().title("Folder").borders(Borders::ALL))
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
         .highlight_symbol(">>");
 
-    f.render_stateful_widget(list, chunks[1], &mut app.folders.state);
+    f.render_stateful_widget(list, chunks[0], &mut app.folders.state);
 
-    let bloc = Block::default().title("Tags").borders(Borders::ALL);
+    let commands: &Vec<(String, String)> = app.commands.items.get(app.folders.current()).unwrap();
+    let commands_items = commands
+        .iter()
+        .map(|(key, value)| ListItem::new(key.as_str()).style(Style::default().fg(Color::Yellow)))
+        .collect::<Vec<ListItem>>();
 
-    f.render_widget(bloc, chunks[2]);
+    f.render_stateful_widget(
+        List::new(commands_items)
+            .block(Block::default().title("Commands").borders(Borders::ALL))
+            .style(Style::default().fg(Color::White))
+            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+            .highlight_symbol(">>"),
+        chunks[1],
+        &mut app.commands.state,
+    );
+
+    let tags = commands
+        .iter()
+        .map(|(_key, value)| {
+            ListItem::new(value.as_str()).style(Style::default().fg(Color::Yellow))
+        })
+        .collect::<Vec<ListItem>>();
+
+    f.render_widget(
+        List::new(tags)
+            .block(Block::default().title("Tags").borders(Borders::ALL))
+            .style(Style::default().fg(Color::White))
+            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+            .highlight_symbol(">>"),
+        chunks[2],
+    );
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
