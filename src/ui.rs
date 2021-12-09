@@ -78,7 +78,7 @@ where
         .collect::<Vec<ListItem>>();
 
     let list = List::new(items)
-        .block(Block::default().title("Folder").borders(Borders::ALL))
+        .block(Block::default().title("Folders").borders(Borders::ALL))
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
         .highlight_symbol(">>");
@@ -88,7 +88,7 @@ where
     let commands: &Vec<(String, String)> = app.commands.items.get(app.folders.current()).unwrap();
     let commands_items = commands
         .iter()
-        .map(|(key, value)| ListItem::new(key.as_str()).style(Style::default().fg(Color::Yellow)))
+        .map(|(key, _value)| ListItem::new(key.as_str()).style(Style::default().fg(Color::Yellow)))
         .collect::<Vec<ListItem>>();
 
     f.render_stateful_widget(

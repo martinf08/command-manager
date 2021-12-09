@@ -1,22 +1,29 @@
 use crate::fixtures::generate_data;
 use tui::widgets::ListState;
 
+pub trait State {
+    fn next(&mut self);
+    fn previous(&mut self);
+}
+
 pub struct TabsState<'a> {
     pub titles: Vec<&'a str>,
     pub index: usize,
 }
 
-impl<'a> TabsState<'a> {
-    pub fn new(titles: Vec<&'a str>) -> Self {
-        TabsState { titles, index: 0 }
-    }
-
-    pub fn next(&mut self) {
+impl<'a> State for TabsState<'a> {
+    fn next(&mut self) {
         self.index = (self.index + 1) % self.titles.len();
     }
 
-    pub fn previous(&mut self) {
+    fn previous(&mut self) {
         self.index = (self.index + self.titles.len() - 1) % self.titles.len();
+    }
+}
+
+impl<'a> TabsState<'a> {
+    pub fn new(titles: Vec<&'a str>) -> Self {
+        TabsState { titles, index: 0 }
     }
 }
 
@@ -25,40 +32,50 @@ pub struct StatefulList<T> {
     pub items: Vec<T>,
 }
 
+fn get_next_state_to_select(state: &ListState, item_count: usize) -> Option<usize> {
+    match state.selected() {
+        Some(i) => {
+            if i >= item_count - 1 {
+                Some(0)
+            } else {
+                Some(i + 1)
+            }
+        }
+        None => Some(0),
+    }
+}
+
+fn get_previous_state_to_select(state: &ListState, item_count: usize) -> Option<usize> {
+    match state.selected() {
+        Some(i) => {
+            if i == 0 {
+                Some(item_count - 1)
+            } else {
+                Some(i - 1)
+            }
+        }
+        None => Some(0),
+    }
+}
+
+impl<T> State for StatefulList<T> {
+    fn next(&mut self) {
+        self.state
+            .select(get_next_state_to_select(&self.state, self.items.len()));
+    }
+
+    fn previous(&mut self) {
+        self.state
+            .select(get_previous_state_to_select(&self.state, self.items.len()));
+    }
+}
+
 impl<T> StatefulList<T> {
     fn with_items(items: Vec<T>) -> Self {
         StatefulList {
             state: ListState::default(),
             items,
         }
-    }
-
-    pub fn next(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i >= self.items.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-    }
-
-    pub fn previous(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i == 0 {
-                    self.items.len() - 1
-                } else {
-                    i - 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
     }
 
     pub fn unselect(&mut self) {
@@ -79,6 +96,22 @@ pub struct CommandStates {
     pub state: ListState,
 }
 
+impl State for CommandStates {
+    fn next(&mut self) {
+        self.state.select(get_next_state_to_select(
+            &self.state,
+            self.items.get(self.index).unwrap().len(),
+        ))
+    }
+
+    fn previous(&mut self) {
+        self.state.select(get_previous_state_to_select(
+            &self.state,
+            self.items.get(self.index).unwrap().len(),
+        ));
+    }
+}
+
 impl CommandStates {
     pub fn new(items: Vec<Vec<(String, String)>>) -> Self {
         CommandStates {
@@ -88,7 +121,7 @@ impl CommandStates {
         }
     }
 
-    pub fn set_position(&mut self, index: usize) {
+    pub fn set_list_position(&mut self, index: usize) {
         self.index = index;
     }
 }
