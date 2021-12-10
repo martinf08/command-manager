@@ -126,11 +126,24 @@ impl CommandStates {
     }
 }
 
+pub struct PopupContent<'a> {
+    pub message: &'a str,
+    pub confirm: &'a str,
+}
+
+impl<'a> PopupContent<'a> {
+    pub fn new(message: &'a str, confirm: &'a str) -> Self {
+        PopupContent { message, confirm }
+    }
+}
+
 pub struct App<'a> {
     pub title: &'a str,
     pub tabs: TabsState<'a>,
     pub folders: StatefulList<String>,
     pub commands: CommandStates,
+    pub show_command_confirmation: bool,
+    pub confirmation_popup: PopupContent<'a>,
 }
 
 impl<'a> App<'a> {
@@ -141,6 +154,11 @@ impl<'a> App<'a> {
             tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
             folders: StatefulList::with_items(folders),
             commands: CommandStates::new(commands),
+            show_command_confirmation: false,
+            confirmation_popup: PopupContent::new(
+                "Are you sure you want the selected command ? (Esc to cancel)",
+                "Press Enter",
+            ),
         }
     }
 }

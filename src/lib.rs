@@ -52,7 +52,29 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                             app.commands.set_list_position(app.folders.current());
                         }
                     },
-                    KeyCode::Enter => {}
+                    KeyCode::Enter => match app.commands.state.selected() {
+                        Some(_) => match app.show_command_confirmation {
+                            true => {}
+                            false => {
+                                app.show_command_confirmation = true;
+                            }
+                        },
+                        None => match app.folders.state.selected() {
+                            Some(_) => {
+                                app.commands.state.select(Some(0));
+                            }
+                            None => {}
+                        },
+                    },
+                    KeyCode::Esc => match app.show_command_confirmation {
+                        true => {
+                            app.show_command_confirmation = false;
+                        }
+                        false => {
+                            app.commands.state.select(None);
+                            app.folders.state.select(None);
+                        }
+                    },
                     _ => {}
                 }
             }

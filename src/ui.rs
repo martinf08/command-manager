@@ -1,9 +1,9 @@
 use crate::App;
 use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, Tabs};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
 use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -116,6 +116,70 @@ where
             .highlight_symbol(">>"),
         chunks[2],
     );
+
+    if app.show_command_confirmation {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .style(Style::default().fg(Color::Yellow));
+
+        let area = centered_rect(70, 20, chunks[1]);
+
+        f.render_widget(Clear, area);
+        f.render_widget(block, area);
+
+        let layout = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(100)].as_ref())
+            .margin(area.height / 3)
+            .split(area);
+
+        let text = vec![
+            Spans::from(Span::styled(
+                app.confirmation_popup.message,
+                Style::default().fg(Color::White),
+            )),
+            Spans::from(Span::raw("")),
+            Spans::from(Span::styled(
+                app.confirmation_popup.confirm,
+                Style::default()
+                    .add_modifier(Modifier::BOLD | Modifier::RAPID_BLINK)
+                    .fg(Color::Black)
+                    .bg(Color::Green),
+            )),
+        ];
+
+        let p = Paragraph::new(text).alignment(Alignment::Center);
+
+        f.render_widget(p, layout[0]);
+    }
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let split_y = (100 - percent_y) / 2;
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage(split_y),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage(split_y),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    let split_x = (100 - percent_x) / 2;
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage(split_x),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage(split_x),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
