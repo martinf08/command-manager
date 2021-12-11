@@ -8,11 +8,12 @@ pub fn generate_data() -> (Vec<String>, Vec<Vec<(String, String)>>) {
     let commands = vec![
         vec![
             ("ssh app@domain.tld".to_string(), "ssh:app".to_string()),
-             ("ssh db@domain.tld".to_string(), "ssh:db".to_string()),
+            ("ssh db@domain.tld".to_string(), "ssh:db".to_string()),
             ("ssh preprod@domain.tld".to_string(), "ssh:preprod".to_string()),
         ],
         vec![
-            ("cd /home/user".to_string(), "nav:home".to_string()),
+            ("cd ~/ && $SHELL".to_string(), "nav:home".to_string()),
+            ("cd /tmp && $SHELL".to_string(), "nav:home".to_string()),
             ("cd /var/www/super/app".to_string(), "nav:app".to_string()),
         ],
         vec![

@@ -1,3 +1,6 @@
+mod cmd;
+
+use crate::cmd::Cmd;
 use cm::{app::App, run_app};
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
@@ -33,7 +36,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     terminal.show_cursor()?;
 
     match &result {
-        Ok(Some(_)) => (),
+        Ok(Some((cmd_line, _tag))) => {
+            Cmd::create_and_run(cmd_line)?;
+        }
         Err(e) => {
             eprintln!("{}", e);
             return Ok(());

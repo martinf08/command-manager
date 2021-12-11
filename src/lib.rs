@@ -12,7 +12,10 @@ use tui::Terminal;
 use crate::app::{App, State};
 use crate::ui::ui;
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<Option<String>> {
+pub fn run_app<B: Backend>(
+    terminal: &mut Terminal<B>,
+    mut app: App,
+) -> io::Result<Option<(String, String)>> {
     loop {
         terminal.draw(|f| ui(f, &mut app))?;
 
@@ -54,7 +57,13 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                     },
                     KeyCode::Enter => match app.commands.state.selected() {
                         Some(_) => match app.show_command_confirmation {
-                            true => {}
+                            true => {
+                                return Ok(Option::from(
+                                    app.commands.items[app.commands.index]
+                                        [app.commands.state.selected().unwrap()]
+                                    .clone(),
+                                ));
+                            }
                             false => {
                                 app.show_command_confirmation = true;
                             }
