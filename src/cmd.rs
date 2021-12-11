@@ -64,7 +64,6 @@ impl Cmd {
 
     pub fn create_and_run(line: &str) -> Result<Self, Box<dyn Error>> {
         let cmd = Cmd::new(line)?;
-        dbg!(&cmd);
         cmd.run()?;
         Ok(cmd)
     }

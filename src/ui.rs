@@ -27,12 +27,12 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Tabs"))
         .select(app.tabs.index)
-        .style(Style::default().fg(Color::Cyan))
+        .style(Style::default().fg(Color::DarkGray))
         .highlight_style(
             Style::default()
                 .add_modifier(Modifier::BOLD)
-                .fg(Color::Black)
-                .bg(Color::Cyan),
+                .fg(Color::Red)
+                .bg(Color::Gray),
         );
 
     f.render_widget(tabs, chunks[0]);
@@ -74,53 +74,61 @@ where
         .items
         .iter()
         .filter(|item| !item.trim().is_empty())
-        .map(|item| ListItem::new(item.as_str()).style(Style::default().fg(Color::Yellow)))
+        .map(|item| ListItem::new(item.as_str()).style(Style::default().fg(Color::White)))
         .collect::<Vec<ListItem>>();
 
     let list = List::new(items)
         .block(Block::default().title("Folders").borders(Borders::ALL))
-        .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-        .highlight_symbol(">>");
+        .style(Style::default().fg(Color::DarkGray))
+        .highlight_style(
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Red)
+                .bg(Color::Gray),
+        )
+        .highlight_symbol("⟩");
 
     f.render_stateful_widget(list, chunks[0], &mut app.folders.state);
 
     let commands: &Vec<(String, String)> = app.commands.items.get(app.folders.current()).unwrap();
     let commands_items = commands
         .iter()
-        .map(|(key, _value)| ListItem::new(key.as_str()).style(Style::default().fg(Color::Yellow)))
+        .map(|(key, _value)| ListItem::new(key.as_str()).style(Style::default().fg(Color::White)))
         .collect::<Vec<ListItem>>();
 
     f.render_stateful_widget(
         List::new(commands_items)
             .block(Block::default().title("Commands").borders(Borders::ALL))
-            .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-            .highlight_symbol(">>"),
+            .style(Style::default().fg(Color::DarkGray))
+            .highlight_style(
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .fg(Color::Red)
+                    .bg(Color::Gray),
+            )
+            .highlight_symbol("⟩"),
         chunks[1],
         &mut app.commands.state,
     );
 
     let tags = commands
         .iter()
-        .map(|(_key, value)| {
-            ListItem::new(value.as_str()).style(Style::default().fg(Color::Yellow))
-        })
+        .map(|(_key, value)| ListItem::new(value.as_str()).style(Style::default().fg(Color::White)))
         .collect::<Vec<ListItem>>();
 
     f.render_widget(
         List::new(tags)
             .block(Block::default().title("Tags").borders(Borders::ALL))
-            .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-            .highlight_symbol(">>"),
+            .style(Style::default().fg(Color::DarkGray))
+            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+            .highlight_symbol("⟩"),
         chunks[2],
     );
 
     if app.show_command_confirmation {
         let block = Block::default()
             .borders(Borders::ALL)
-            .style(Style::default().fg(Color::Yellow));
+            .style(Style::default().fg(Color::DarkGray));
 
         let area = centered_rect(70, 20, chunks[1]);
 
@@ -142,9 +150,9 @@ where
             Spans::from(Span::styled(
                 app.confirmation_popup.confirm,
                 Style::default()
-                    .add_modifier(Modifier::BOLD | Modifier::RAPID_BLINK)
-                    .fg(Color::Black)
-                    .bg(Color::Green),
+                    .add_modifier(Modifier::BOLD)
+                    .fg(Color::Red)
+                    .bg(Color::Gray),
             )),
         ];
 
