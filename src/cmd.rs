@@ -73,6 +73,7 @@ impl Cmd {
 mod tests {
     use super::*;
 
+    #[allow(unused)]
     fn exec_valid_cmd(line: &str) {
         let cmd = Cmd::new(line);
 
