@@ -27,7 +27,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Tabs"))
         .select(app.tabs.index)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(get_border_style_from_selected_status(app.tabs.current_selected))
         .highlight_style(
             Style::default()
                 .add_modifier(Modifier::BOLD)
@@ -79,7 +79,7 @@ where
 
     let list = List::new(items)
         .block(Block::default().title("Folders").borders(Borders::ALL))
-        .style(Style::default().fg(Color::DarkGray))
+        .style(get_border_style_from_selected_status(app.folders.current_selected))
         .highlight_style(
             Style::default()
                 .add_modifier(Modifier::BOLD)
@@ -99,7 +99,7 @@ where
     f.render_stateful_widget(
         List::new(commands_items)
             .block(Block::default().title("Commands").borders(Borders::ALL))
-            .style(Style::default().fg(Color::DarkGray))
+            .style(get_border_style_from_selected_status(app.commands.current_selected))
             .highlight_style(
                 Style::default()
                     .add_modifier(Modifier::BOLD)
@@ -119,7 +119,13 @@ where
     f.render_widget(
         List::new(tags)
             .block(Block::default().title("Tags").borders(Borders::ALL))
-            .style(Style::default().fg(Color::DarkGray))
+            .style(
+                if app.commands.current_selected {
+                    Style::default().fg(Color::White)
+                } else {
+                    Style::default().fg(Color::DarkGray)
+                }
+            )
             .highlight_style(Style::default().add_modifier(Modifier::BOLD))
             .highlight_symbol("⟩"),
         chunks[2],
@@ -128,7 +134,7 @@ where
     if app.show_command_confirmation {
         let block = Block::default()
             .borders(Borders::ALL)
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(Color::White));
 
         let area = centered_rect(70, 20, chunks[1]);
 
@@ -188,6 +194,14 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1]
+}
+
+fn get_border_style_from_selected_status(selected: bool) -> Style {
+    if selected {
+        return Style::default().fg(Color::White);
+    }
+
+    Style::default().fg(Color::DarkGray)
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
