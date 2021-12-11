@@ -97,14 +97,14 @@ impl<T> StatefulList<T> {
     }
 }
 
-pub struct CommandStates {
+pub struct MultiDepthItemsState {
     pub items: Vec<Vec<(String, String)>>,
     pub index: usize,
     pub state: ListState,
     pub current_selected: bool,
 }
 
-impl State for CommandStates {
+impl State for MultiDepthItemsState {
     fn next(&mut self) {
         self.state.select(get_next_state_to_select(
             &self.state,
@@ -120,9 +120,9 @@ impl State for CommandStates {
     }
 }
 
-impl CommandStates {
-    pub fn new(items: Vec<Vec<(String, String)>>) -> Self {
-        CommandStates {
+impl MultiDepthItemsState {
+    pub fn new(items: &Vec<Vec<(String, String)>>) -> Self {
+        MultiDepthItemsState {
             items: items.clone(),
             index: 0,
             state: ListState::default(),
@@ -150,9 +150,10 @@ pub struct App<'a> {
     pub title: &'a str,
     pub tabs: TabsState<'a>,
     pub folders: StatefulList<String>,
-    pub commands: CommandStates,
+    pub commands: MultiDepthItemsState,
     pub show_command_confirmation: bool,
     pub confirmation_popup: PopupContent<'a>,
+    pub tags: MultiDepthItemsState,
 }
 
 impl<'a> App<'a> {
@@ -162,12 +163,13 @@ impl<'a> App<'a> {
             title,
             tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
             folders: StatefulList::with_items(folders),
-            commands: CommandStates::new(commands),
+            commands: MultiDepthItemsState::new(&commands),
             show_command_confirmation: false,
             confirmation_popup: PopupContent::new(
                 "Are you sure you want the selected command ? (Esc to cancel)",
                 "Press Enter",
             ),
+            tags: MultiDepthItemsState::new(&commands),
         }
     }
 }

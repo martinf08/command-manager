@@ -28,12 +28,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .block(Block::default().borders(Borders::ALL).title("Tabs"))
         .select(app.tabs.index)
         .style(get_border_style_from_selected_status(app.tabs.current_selected))
-        .highlight_style(
-            Style::default()
-                .add_modifier(Modifier::BOLD)
-                .fg(Color::Red)
-                .bg(Color::Gray),
-        );
+        .highlight_style(get_highlight_style());
 
     f.render_widget(tabs, chunks[0]);
     match app.tabs.index {
@@ -80,12 +75,7 @@ where
     let list = List::new(items)
         .block(Block::default().title("Folders").borders(Borders::ALL))
         .style(get_border_style_from_selected_status(app.folders.current_selected))
-        .highlight_style(
-            Style::default()
-                .add_modifier(Modifier::BOLD)
-                .fg(Color::Red)
-                .bg(Color::Gray),
-        )
+        .highlight_style(get_highlight_style())
         .highlight_symbol("⟩");
 
     f.render_stateful_widget(list, chunks[0], &mut app.folders.state);
@@ -100,12 +90,7 @@ where
         List::new(commands_items)
             .block(Block::default().title("Commands").borders(Borders::ALL))
             .style(get_border_style_from_selected_status(app.commands.current_selected))
-            .highlight_style(
-                Style::default()
-                    .add_modifier(Modifier::BOLD)
-                    .fg(Color::Red)
-                    .bg(Color::Gray),
-            )
+            .highlight_style(get_highlight_style())
             .highlight_symbol("⟩"),
         chunks[1],
         &mut app.commands.state,
@@ -116,19 +101,13 @@ where
         .map(|(_key, value)| ListItem::new(value.as_str()).style(Style::default().fg(Color::White)))
         .collect::<Vec<ListItem>>();
 
-    f.render_widget(
+    f.render_stateful_widget(
         List::new(tags)
             .block(Block::default().title("Tags").borders(Borders::ALL))
-            .style(
-                if app.commands.current_selected {
-                    Style::default().fg(Color::White)
-                } else {
-                    Style::default().fg(Color::DarkGray)
-                }
-            )
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-            .highlight_symbol("⟩"),
+            .style(get_border_style_from_selected_status(app.commands.current_selected))
+            .highlight_style(get_highlight_style()),
         chunks[2],
+        &mut app.tags.state,
     );
 
     if app.show_command_confirmation {
@@ -202,6 +181,13 @@ fn get_border_style_from_selected_status(selected: bool) -> Style {
     }
 
     Style::default().fg(Color::DarkGray)
+}
+
+fn get_highlight_style() -> Style {
+    Style::default()
+        .add_modifier(Modifier::BOLD)
+        .fg(Color::Red)
+        .bg(Color::Gray)
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)

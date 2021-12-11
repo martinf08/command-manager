@@ -32,6 +32,7 @@ pub fn run_app<B: Backend>(
                             app.commands.current_selected = true;
 
                             app.commands.state.select(Some(0));
+                            app.tags.state.select(Some(0));
                         }
                         None => app.tabs.next(),
                     },
@@ -41,6 +42,7 @@ pub fn run_app<B: Backend>(
                             app.folders.current_selected = true;
 
                             app.commands.state.select(None);
+                            app.tags.state.select(None);
                         }
                         None => match app.folders.state.selected() {
                             Some(_) => {
@@ -48,17 +50,24 @@ pub fn run_app<B: Backend>(
                                 app.tabs.current_selected = true;
 
                                 app.folders.state.select(None);
-                                app.commands.set_list_position(0)
+
+                                app.commands.set_list_position(0);
+                                app.tags.set_list_position(0);
                             }
                             None => app.tabs.previous(),
                         },
                     },
                     KeyCode::Down => match app.commands.state.selected() {
-                        Some(_) => app.commands.next(),
+                        Some(_) => {
+                            app.commands.next();
+                            app.tags.next();
+                        },
                         None => match app.folders.state.selected() {
                             Some(_) => {
                                 app.folders.next();
+
                                 app.commands.set_list_position(app.folders.current());
+                                app.tags.set_list_position(app.folders.current());
                             },
                             None => {
                                 app.tabs.current_selected = false;
@@ -66,14 +75,20 @@ pub fn run_app<B: Backend>(
 
                                 app.folders.state.select(Some(0));
                                 app.commands.set_list_position(app.folders.current());
+                                app.tags.set_list_position(app.folders.current());
                             }
                         },
                     },
                     KeyCode::Up => match app.commands.state.selected() {
-                        Some(_) => app.commands.previous(),
+                        Some(_) => {
+                            app.commands.previous();
+                            app.tags.previous();
+                        },
                         None => {
                             app.folders.previous();
+
                             app.commands.set_list_position(app.folders.current());
+                            app.tags.set_list_position(app.folders.current());
                         }
                     },
                     KeyCode::Enter => match app.commands.state.selected() {
@@ -96,6 +111,7 @@ pub fn run_app<B: Backend>(
                                 app.commands.current_selected = true;
 
                                 app.commands.state.select(Some(0));
+                                app.tags.state.select(Some(0));
                             }
                             None => {}
                         },
@@ -111,6 +127,7 @@ pub fn run_app<B: Backend>(
                             app.tabs.current_selected = true;
 
                             app.commands.state.select(None);
+                            app.tags.state.select(None);
                             app.folders.state.select(None);
                         }
                     },
