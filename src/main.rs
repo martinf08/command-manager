@@ -10,10 +10,13 @@ use crossterm::terminal::{
 };
 use std::error::Error;
 use std::io;
+use std::process::exit;
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    db::init_db()?;
+
     // setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -22,10 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    db::init_db()?;
-
     // create app and run it
-    // let _history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");
     let app = App::new("Command Manager");
     let result = run_app(&mut terminal, app);
 

@@ -9,3 +9,4 @@ edition = "2021"
 crossterm = "0.22.1"
 tui = { version = "0.16.0", default-features = false, features = ["crossterm"]}
 rusqlite = { version = "0.26.1", features = ["bundled"] }
+dirs = "4.0.0"
