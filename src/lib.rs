@@ -16,7 +16,6 @@ pub fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     mut app: App,
 ) -> io::Result<Option<(String, String)>> {
-
     app.tabs.current_selected = true;
 
     loop {
@@ -61,14 +60,14 @@ pub fn run_app<B: Backend>(
                         Some(_) => {
                             app.commands.next();
                             app.tags.next();
-                        },
+                        }
                         None => match app.folders.state.selected() {
                             Some(_) => {
                                 app.folders.next();
 
                                 app.commands.set_list_position(app.folders.current());
                                 app.tags.set_list_position(app.folders.current());
-                            },
+                            }
                             None => {
                                 app.tabs.current_selected = false;
                                 app.folders.current_selected = true;
@@ -83,7 +82,7 @@ pub fn run_app<B: Backend>(
                         Some(_) => {
                             app.commands.previous();
                             app.tags.previous();
-                        },
+                        }
                         None => {
                             app.folders.previous();
 

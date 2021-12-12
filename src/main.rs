@@ -1,4 +1,5 @@
 mod cmd;
+mod db;
 
 use crate::cmd::Cmd;
 use cm::{app::App, run_app};
@@ -20,6 +21,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
+    db::init_db()?;
 
     // create app and run it
     // let _history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");

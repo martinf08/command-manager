@@ -27,7 +27,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Tabs"))
         .select(app.tabs.index)
-        .style(get_border_style_from_selected_status(app.tabs.current_selected))
+        .style(get_border_style_from_selected_status(
+            app.tabs.current_selected,
+        ))
         .highlight_style(get_highlight_style());
 
     f.render_widget(tabs, chunks[0]);
@@ -74,7 +76,9 @@ where
 
     let list = List::new(items)
         .block(Block::default().title("Folders").borders(Borders::ALL))
-        .style(get_border_style_from_selected_status(app.folders.current_selected))
+        .style(get_border_style_from_selected_status(
+            app.folders.current_selected,
+        ))
         .highlight_style(get_highlight_style())
         .highlight_symbol("⟩");
 
@@ -89,7 +93,9 @@ where
     f.render_stateful_widget(
         List::new(commands_items)
             .block(Block::default().title("Commands").borders(Borders::ALL))
-            .style(get_border_style_from_selected_status(app.commands.current_selected))
+            .style(get_border_style_from_selected_status(
+                app.commands.current_selected,
+            ))
             .highlight_style(get_highlight_style())
             .highlight_symbol("⟩"),
         chunks[1],
@@ -104,7 +110,9 @@ where
     f.render_stateful_widget(
         List::new(tags)
             .block(Block::default().title("Tags").borders(Borders::ALL))
-            .style(get_border_style_from_selected_status(app.commands.current_selected))
+            .style(get_border_style_from_selected_status(
+                app.commands.current_selected,
+            ))
             .highlight_style(get_highlight_style()),
         chunks[2],
         &mut app.tags.state,
