@@ -1,4 +1,6 @@
+use crate::db::{get_commands, get_folders};
 use crate::fixtures::generate_data;
+use std::process::exit;
 use tui::widgets::ListState;
 
 pub trait State {
@@ -158,18 +160,19 @@ pub struct App<'a> {
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str) -> Self {
-        let (folders, commands) = generate_data();
-        App {
-            title,
-            tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
-            folders: StatefulList::with_items(folders),
-            commands: MultiDepthItemsState::new(&commands),
-            show_command_confirmation: false,
-            confirmation_popup: PopupContent::new(
-                "Are you sure you want the selected command ? (Esc to cancel)",
-                "Press Enter",
-            ),
-            tags: MultiDepthItemsState::new(&commands),
-        }
+        let folders = get_folders().expect("Failed to get folders");
+        let commands = get_commands(None).expect("Failed to get commands");
+        // App {
+        //     title,
+        //     tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
+        //     folders: StatefulList::with_items(folders),
+        //     commands: StatefulList::with_items(commands),
+        //     show_command_confirmation: false,
+        //     confirmation_popup: PopupContent::new(
+        //         "Are you sure you want the selected command ? (Esc to cancel)",
+        //         "Press Enter",
+        //     ),
+        //     tags: StatefulList::with_items(commands.clone()),
+        // }
     }
 }

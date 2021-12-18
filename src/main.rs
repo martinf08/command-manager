@@ -10,12 +10,11 @@ use crossterm::terminal::{
 };
 use std::error::Error;
 use std::io;
-use std::process::exit;
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    db::init_db()?;
+    db::init_db(true)?;
 
     // setup terminal
     enable_raw_mode()?;

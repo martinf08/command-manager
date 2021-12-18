@@ -1,4 +1,5 @@
 pub mod app;
+mod db;
 mod fixtures;
 mod ui;
 
