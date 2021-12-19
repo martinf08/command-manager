@@ -1,5 +1,6 @@
 mod cmd;
 mod db;
+mod fixtures;
 
 use crate::cmd::Cmd;
 use cm::{app::App, run_app};

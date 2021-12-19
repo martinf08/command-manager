@@ -84,14 +84,17 @@ where
 
     f.render_stateful_widget(list, chunks[0], &mut app.folders.state);
 
-    let commands: &Vec<(String, String)> = app.commands.items.get(app.folders.current()).unwrap();
-    let commands_items = commands
-        .iter()
-        .map(|(key, _value)| ListItem::new(key.as_str()).style(Style::default().fg(Color::White)))
-        .collect::<Vec<ListItem>>();
+    let vec_to_style = |v: Vec<String>| -> Vec<ListItem> {
+        v.into_iter()
+            .map(|v| ListItem::new(v).style(Style::default().fg(Color::White)))
+            .collect::<Vec<ListItem>>()
+    };
+
+    let commands = app.commands.items.clone();
+    let command_items = vec_to_style(commands);
 
     f.render_stateful_widget(
-        List::new(commands_items)
+        List::new(command_items)
             .block(Block::default().title("Commands").borders(Borders::ALL))
             .style(get_border_style_from_selected_status(
                 app.commands.current_selected,
@@ -102,13 +105,11 @@ where
         &mut app.commands.state,
     );
 
-    let tags = commands
-        .iter()
-        .map(|(_key, value)| ListItem::new(value.as_str()).style(Style::default().fg(Color::White)))
-        .collect::<Vec<ListItem>>();
+    let tags = app.tags.items.clone();
+    let tag_items = vec_to_style(tags);
 
     f.render_stateful_widget(
-        List::new(tags)
+        List::new(tag_items)
             .block(Block::default().title("Tags").borders(Borders::ALL))
             .style(get_border_style_from_selected_status(
                 app.commands.current_selected,

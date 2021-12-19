@@ -1,6 +1,4 @@
-use crate::db::{get_commands, get_folders};
-use crate::fixtures::generate_data;
-use std::process::exit;
+use crate::db::{get_commands_and_tags, get_folders};
 use tui::widgets::ListState;
 
 pub trait State {
@@ -152,27 +150,35 @@ pub struct App<'a> {
     pub title: &'a str,
     pub tabs: TabsState<'a>,
     pub folders: StatefulList<String>,
-    pub commands: MultiDepthItemsState,
+    pub commands: StatefulList<String>,
     pub show_command_confirmation: bool,
     pub confirmation_popup: PopupContent<'a>,
-    pub tags: MultiDepthItemsState,
+    pub tags: StatefulList<String>,
 }
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str) -> Self {
         let folders = get_folders().expect("Failed to get folders");
-        let commands = get_commands(None).expect("Failed to get commands");
-        // App {
-        //     title,
-        //     tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
-        //     folders: StatefulList::with_items(folders),
-        //     commands: StatefulList::with_items(commands),
-        //     show_command_confirmation: false,
-        //     confirmation_popup: PopupContent::new(
-        //         "Are you sure you want the selected command ? (Esc to cancel)",
-        //         "Press Enter",
-        //     ),
-        //     tags: StatefulList::with_items(commands.clone()),
-        // }
+        let (commands, tags) =
+            get_commands_and_tags(None).expect("Failed to get commands and tags");
+        App {
+            title,
+            tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
+            folders: StatefulList::with_items(folders),
+            commands: StatefulList::with_items(commands),
+            show_command_confirmation: false,
+            confirmation_popup: PopupContent::new(
+                "Are you sure you want the selected command ? (Esc to cancel)",
+                "Press Enter",
+            ),
+            tags: StatefulList::with_items(tags),
+        }
+    }
+    pub fn set_commands_tags_from_position(&mut self, index: usize) {
+        let folder = self.folders.items[index].clone();
+        let (commands, tags) =
+            get_commands_and_tags(Some(folder)).expect("Failed to get commands and tags");
+        self.commands = StatefulList::with_items(commands);
+        self.tags = StatefulList::with_items(tags);
     }
 }

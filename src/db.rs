@@ -1,8 +1,8 @@
-use rusqlite::{Connection, NO_PARAMS};
+#![allow(unused)]
+use crate::fixtures;
+use rusqlite::Connection;
 use std::error::Error;
 use std::path::Path;
-
-mod fixtures;
 
 pub fn init_db(init_fixtures: bool) -> Result<(), Box<dyn Error>> {
     let db = get_db()?;
@@ -81,11 +81,14 @@ pub fn get_folders() -> Result<Vec<String>, Box<dyn Error>> {
     Ok(folders)
 }
 
-pub fn get_commands(folder: Option<String>) -> Result<Vec<(String, String)>, Box<dyn Error>> {
+pub fn get_commands_and_tags(
+    folder: Option<String>,
+) -> Result<(Vec<String>, Vec<String>), Box<dyn Error>> {
     let db = get_db()?;
     let conn = Connection::open(db)?;
 
-    let mut commands: Vec<(String, String)> = Vec::new();
+    let mut commands: Vec<String> = Vec::new();
+    let mut tags: Vec<String> = Vec::new();
 
     if folder.is_some() {
         let mut stmt = conn.prepare(
@@ -102,7 +105,8 @@ pub fn get_commands(folder: Option<String>) -> Result<Vec<(String, String)>, Box
         })?
         .for_each(|row| {
             let (command, tag) = row.expect("Unable to get row");
-            commands.push((command, tag));
+            commands.push(command);
+            tags.push(tag);
         });
     } else {
         let mut stmt = conn.prepare(
@@ -118,8 +122,14 @@ pub fn get_commands(folder: Option<String>) -> Result<Vec<(String, String)>, Box
         })?
         .for_each(|row| {
             let (command, tag) = row.expect("Unable to get row");
-            commands.push((command, tag));
+            commands.push(command);
+            tags.push(tag);
         });
     };
-    Ok(commands)
+
+    if commands.len() != tags.len() {
+        panic!("Commands and tags are not the same length");
+    }
+
+    Ok((commands, tags))
 }
