@@ -3,7 +3,7 @@ use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -47,7 +47,14 @@ where
 {
     let sub_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .constraints(
+            [
+                Constraint::Percentage(50),
+                Constraint::Percentage(20),
+                Constraint::Percentage(30),
+            ]
+            .as_ref(),
+        )
         .split(rect);
 
     let chunks = Layout::default()
@@ -154,6 +161,24 @@ where
 
         f.render_widget(p, layout[0]);
     }
+
+    let mut command_text = "\n".to_string();
+    if app.commands.state.selected().is_some() {
+        command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
+    }
+
+    let detail_command_paragraph = Paragraph::new(command_text)
+        .alignment(Alignment::Left)
+        .wrap(Wrap { trim: true })
+        .style(Style::default().fg(Color::Yellow))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Command details")
+                .style(Style::default().fg(Color::White)),
+        );
+
+    f.render_widget(detail_command_paragraph, sub_chunks[1]);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
