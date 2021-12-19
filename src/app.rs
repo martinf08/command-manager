@@ -97,44 +97,6 @@ impl<T> StatefulList<T> {
     }
 }
 
-pub struct MultiDepthItemsState {
-    pub items: Vec<Vec<(String, String)>>,
-    pub index: usize,
-    pub state: ListState,
-    pub current_selected: bool,
-}
-
-impl State for MultiDepthItemsState {
-    fn next(&mut self) {
-        self.state.select(get_next_state_to_select(
-            &self.state,
-            self.items.get(self.index).unwrap().len(),
-        ))
-    }
-
-    fn previous(&mut self) {
-        self.state.select(get_previous_state_to_select(
-            &self.state,
-            self.items.get(self.index).unwrap().len(),
-        ));
-    }
-}
-
-impl MultiDepthItemsState {
-    pub fn new(items: &Vec<Vec<(String, String)>>) -> Self {
-        MultiDepthItemsState {
-            items: items.clone(),
-            index: 0,
-            state: ListState::default(),
-            current_selected: false,
-        }
-    }
-
-    pub fn set_list_position(&mut self, index: usize) {
-        self.index = index;
-    }
-}
-
 pub struct PopupContent<'a> {
     pub message: &'a str,
     pub confirm: &'a str,
