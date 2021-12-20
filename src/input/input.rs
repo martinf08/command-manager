@@ -21,6 +21,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> KeyParse
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 let result = KeyParser::parse_key(key, &mut app);
+
                 if result.is_ok() {
                     if let Some(key_parser_result) = result.unwrap() {
                         return Ok(Some(key_parser_result));
