@@ -164,8 +164,8 @@ impl<'a> App<'a> {
         self.commands.current_selected = false;
         self.tags.current_selected = false;
 
-        self.commands.state.select(None);
-        self.tags.state.select(None);
+        self.commands.unselect();
+        self.tags.unselect();
     }
 
     pub fn set_current_selected_commands_tags(&mut self, value: bool) {
@@ -181,7 +181,7 @@ impl<'a> App<'a> {
 
     pub fn switch_selected_folders_off(&mut self) {
         self.folders.current_selected = false;
-        self.folders.state.select(None);
+        self.folders.unselect();
     }
 
     pub fn set_current_selected_folder(&mut self, value: bool) {

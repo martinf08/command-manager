@@ -7,7 +7,7 @@ mod ui;
 
 use crate::app::App;
 use crate::cmd::Cmd;
-use crate::input::input::run_app;
+use crate::input::engine::run_app;
 
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;

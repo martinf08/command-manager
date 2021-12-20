@@ -14,7 +14,7 @@ impl KeyParser {
 
     fn process_key_code(key_code: KeyCode, app: &mut App) -> KeyParserResult {
         if key_code == KeyCode::Char('q') {
-            KeyParser::quit(app);
+            KeyParser::quit(app)?;
             return Ok(None);
         }
 
