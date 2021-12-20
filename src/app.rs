@@ -116,6 +116,7 @@ pub struct App<'a> {
     pub show_command_confirmation: bool,
     pub confirmation_popup: PopupContent<'a>,
     pub tags: StatefulList<String>,
+    pub quit: bool,
 }
 
 impl<'a> App<'a> {
@@ -134,6 +135,7 @@ impl<'a> App<'a> {
                 "Press Enter",
             ),
             tags: StatefulList::with_items(tags),
+            quit: false,
         }
     }
     pub fn set_commands_tags_from_position(&mut self, index: usize) {
@@ -142,5 +144,55 @@ impl<'a> App<'a> {
             get_commands_and_tags(Some(folder)).expect("Failed to get commands and tags");
         self.commands = StatefulList::with_items(commands);
         self.tags = StatefulList::with_items(tags);
+    }
+
+    pub fn switch_selected_widgets_off(&mut self) {
+        self.folders.current_selected = false;
+        self.commands.current_selected = false;
+        self.tags.current_selected = false;
+    }
+
+    pub fn switch_selected_commands_tags_on(&mut self) {
+        self.commands.current_selected = true;
+        self.tags.current_selected = true;
+
+        self.commands.state.select(Some(0));
+        self.tags.state.select(Some(0));
+    }
+
+    pub fn switch_selected_commands_tags_off(&mut self) {
+        self.commands.current_selected = false;
+        self.tags.current_selected = false;
+
+        self.commands.state.select(None);
+        self.tags.state.select(None);
+    }
+
+    pub fn set_current_selected_commands_tags(&mut self, value: bool) {
+        self.commands.current_selected = value;
+        self.tags.current_selected = value;
+    }
+
+    pub fn switch_selected_folders_on(&mut self) {
+        self.folders.current_selected = true;
+        self.folders.state.select(Some(0));
+        self.set_commands_tags_from_position(self.folders.current());
+    }
+
+    pub fn switch_selected_folders_off(&mut self) {
+        self.folders.current_selected = false;
+        self.folders.state.select(None);
+    }
+
+    pub fn set_current_selected_folder(&mut self, value: bool) {
+        self.folders.current_selected = value;
+    }
+
+    pub fn set_current_selected_tab(&mut self, value: bool) {
+        self.tabs.current_selected = value;
+    }
+
+    pub fn set_show_command_confirmation(&mut self, value: bool) {
+        self.show_command_confirmation = value;
     }
 }
