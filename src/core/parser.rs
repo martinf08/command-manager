@@ -8,7 +8,7 @@ pub struct KeyParser;
 pub type KeyParserResult = Result<Option<(String, String)>, Box<dyn Error>>;
 
 impl KeyParser {
-    pub fn parse_key(key_event: KeyEvent, app: &mut App) -> KeyParserResult {
+    pub fn parse_event(key_event: KeyEvent, app: &mut App) -> KeyParserResult {
         KeyParser::process_key_code(key_event.code, app)
     }
 

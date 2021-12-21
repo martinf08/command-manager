@@ -1,13 +1,13 @@
 mod app;
 mod cmd;
+mod core;
 mod db;
 mod fixtures;
-mod input;
 mod ui;
 
 use crate::app::App;
 use crate::cmd::Cmd;
-use crate::input::engine::run_app;
+use crate::core::run;
 
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // create app and run it
     let app = App::new("Command Manager");
-    let result = run_app(&mut terminal, app);
+    let result = run(&mut terminal, app);
 
     // restore terminal
     disable_raw_mode()?;
