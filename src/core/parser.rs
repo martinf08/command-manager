@@ -5,14 +5,14 @@ use std::error::Error;
 
 pub struct KeyParser;
 
-pub type KeyParserResult = Result<Option<(String, String)>, Box<dyn Error>>;
+pub type ParserResult = Result<Option<(String, String)>, Box<dyn Error>>;
 
 impl KeyParser {
-    pub fn parse_event(key_event: KeyEvent, app: &mut App) -> KeyParserResult {
+    pub fn parse_event(key_event: KeyEvent, app: &mut App) -> ParserResult {
         KeyParser::process_key_code(key_event.code, app)
     }
 
-    fn process_key_code(key_code: KeyCode, app: &mut App) -> KeyParserResult {
+    fn process_key_code(key_code: KeyCode, app: &mut App) -> ParserResult {
         if key_code == KeyCode::Char('q') {
             KeyParser::quit(app)?;
             return Ok(None);
@@ -26,12 +26,12 @@ impl KeyParser {
         }
     }
 
-    fn quit(app: &mut App) -> KeyParserResult {
+    fn quit(app: &mut App) -> ParserResult {
         app.quit = true;
         Ok(None)
     }
 
-    fn process_tab_0(key_code: KeyCode, app: &mut App) -> KeyParserResult {
+    fn process_tab_0(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
             KeyCode::Right => KeyParser::move_right(app),
             KeyCode::Left => KeyParser::move_left(app),
@@ -43,7 +43,7 @@ impl KeyParser {
         }
     }
 
-    fn move_right(app: &mut App) -> KeyParserResult {
+    fn move_right(app: &mut App) -> ParserResult {
         match app.folders.state.selected() {
             Some(_) => {
                 app.switch_selected_widgets_off();
@@ -55,7 +55,7 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn move_left(app: &mut App) -> KeyParserResult {
+    fn move_left(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => {
                 app.switch_selected_commands_tags_off();
@@ -73,7 +73,7 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn move_down(app: &mut App) -> KeyParserResult {
+    fn move_down(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => {
                 app.commands.next();
@@ -94,7 +94,7 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn move_up(app: &mut App) -> KeyParserResult {
+    fn move_up(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => {
                 app.commands.previous();
@@ -109,7 +109,7 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn enter(app: &mut App) -> KeyParserResult {
+    fn enter(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => match app.show_command_confirmation {
                 true => {
@@ -135,7 +135,7 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn esc(app: &mut App) -> KeyParserResult {
+    fn esc(app: &mut App) -> ParserResult {
         match app.show_command_confirmation {
             true => {
                 app.set_current_selected_commands_tags(true);

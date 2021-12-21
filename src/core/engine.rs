@@ -1,4 +1,4 @@
-use crate::core::parser::{KeyParser, KeyParserResult};
+use crate::core::parser::{KeyParser, ParserResult};
 use crate::ui::ui;
 use crate::App;
 
@@ -8,8 +8,8 @@ use std::time::Duration;
 use tui::backend::Backend;
 use tui::Terminal;
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> KeyParserResult {
-    app.tabs.current_selected = true;
+pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> ParserResult {
+    app.set_current_selected_tab(true);
 
     loop {
         if app.quit {
@@ -20,12 +20,10 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> KeyParse
 
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
-                let result = KeyParser::parse_event(key, &mut app);
+                let result = KeyParser::parse_event(key, &mut app)?;
 
-                if result.is_ok() {
-                    if let Some(key_parser_result) = result.unwrap() {
-                        return Ok(Some(key_parser_result));
-                    }
+                if let Some(key_parser_result) = result {
+                    return Ok(Some(key_parser_result));
                 }
             }
         }
