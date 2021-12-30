@@ -1,3 +1,4 @@
+use std::fs::FileType;
 use crate::db::{get_commands_and_tags, get_folders};
 use tui::widgets::ListState;
 
@@ -7,10 +8,15 @@ enum ConfirmMessage {
     Delete,
 }
 
-enum Mode {
+enum AddType {
+    Command,
+    Namespace,
+}
+
+pub enum Mode {
     Add,
     Delete,
-    Insert,
+    Normal,
 }
 
 pub trait State {
@@ -130,6 +136,8 @@ pub struct App<'a> {
     pub confirmation_popup: PopupContent<'a>,
     pub tags: StatefulList<String>,
     pub quit: bool,
+    pub confirm_add_mode: bool,
+    pub add_type: Option<FileType>,
 }
 
 impl<'a> App<'a> {
@@ -151,6 +159,8 @@ impl<'a> App<'a> {
             ),
             tags: StatefulList::with_items(tags),
             quit: false,
+            confirm_add_mode: false,
+            add_type: None,
         }
     }
     pub fn set_commands_tags_from_position(&mut self, index: usize) {

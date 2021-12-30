@@ -1,4 +1,4 @@
-use crate::app::State;
+use crate::app::{Mode, State};
 use crate::App;
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
@@ -34,13 +34,12 @@ impl KeyParser {
     fn process_tab_0(key_code: KeyCode, app: &mut App) -> ParserResult {
         match app.mode {
             Mode::Normal => KeyParser::process_normal_mode(key_code, app),
-            Mode::Insert => KeyParser::process_insert_mode(key_code, app),
+            Mode::Add => KeyParser::process_add_mode(key_code, app),
             Mode::Delete => KeyParser::process_delete_mode(key_code, app),
-            _ => Ok(None),
         }
     }
 
-    fn process_normal_mode(key_code: KeyCode, app: &mut App) -> ParserResultœ{
+    fn process_normal_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
             KeyCode::Right => KeyParser::move_right(app),
             KeyCode::Left => KeyParser::move_left(app),
@@ -48,13 +47,16 @@ impl KeyParser {
             KeyCode::Up => KeyParser::move_up(app),
             KeyCode::Enter => KeyParser::enter(app),
             KeyCode::Esc => KeyParser::esc(app),
-            KeyCode::Char('i') => KeyParser::insert(app),
+            KeyCode::Char('a') => {
+                app.change_mode(Mode::Add);
+                Ok(None)
+            },
             _ => Ok(None),
         }
     }
 
-    fn process_insert_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
-        unimplemented!()
+    fn process_add_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        unimplemented!();
     }
 
     fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
