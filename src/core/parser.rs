@@ -32,6 +32,15 @@ impl KeyParser {
     }
 
     fn process_tab_0(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match app.mode {
+            Mode::Normal => KeyParser::process_normal_mode(key_code, app),
+            Mode::Insert => KeyParser::process_insert_mode(key_code, app),
+            Mode::Delete => KeyParser::process_delete_mode(key_code, app),
+            _ => Ok(None),
+        }
+    }
+
+    fn process_normal_mode(key_code: KeyCode, app: &mut App) -> ParserResultœ{
         match key_code {
             KeyCode::Right => KeyParser::move_right(app),
             KeyCode::Left => KeyParser::move_left(app),
@@ -39,8 +48,17 @@ impl KeyParser {
             KeyCode::Up => KeyParser::move_up(app),
             KeyCode::Enter => KeyParser::enter(app),
             KeyCode::Esc => KeyParser::esc(app),
+            KeyCode::Char('i') => KeyParser::insert(app),
             _ => Ok(None),
         }
+    }
+
+    fn process_insert_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        unimplemented!()
+    }
+
+    fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        unimplemented!()
     }
 
     fn move_right(app: &mut App) -> ParserResult {

@@ -1,6 +1,18 @@
 use crate::db::{get_commands_and_tags, get_folders};
 use tui::widgets::ListState;
 
+enum ConfirmMessage {
+    Add,
+    Command,
+    Delete,
+}
+
+enum Mode {
+    Add,
+    Delete,
+    Insert,
+}
+
 pub trait State {
     fn next(&mut self);
     fn previous(&mut self);
@@ -109,6 +121,7 @@ impl<'a> PopupContent<'a> {
 }
 
 pub struct App<'a> {
+    pub mode: Mode,
     pub title: &'a str,
     pub tabs: TabsState<'a>,
     pub folders: StatefulList<String>,
@@ -124,7 +137,9 @@ impl<'a> App<'a> {
         let folders = get_folders().expect("Failed to get folders");
         let (commands, tags) =
             get_commands_and_tags(None).expect("Failed to get commands and tags");
+
         App {
+            mode: Mode::Normal,
             title,
             tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
             folders: StatefulList::with_items(folders),
@@ -194,5 +209,9 @@ impl<'a> App<'a> {
 
     pub fn set_show_command_confirmation(&mut self, value: bool) {
         self.show_command_confirmation = value;
+    }
+
+    pub fn change_mode(&mut self, mode: Mode) {
+        self.mode = mode;
     }
 }
