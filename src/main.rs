@@ -5,7 +5,7 @@ mod db;
 mod fixtures;
 mod ui;
 
-use crate::app::App;
+use crate::app::app::App;
 use crate::cmd::Cmd;
 use crate::core::run;
 

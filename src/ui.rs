@@ -1,4 +1,6 @@
-use crate::App;
+use crate::app::add::AddType;
+use crate::app::app::{App, Mode};
+
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -82,7 +84,7 @@ where
         .collect::<Vec<ListItem>>();
 
     let list = List::new(items)
-        .block(Block::default().title("Folders").borders(Borders::ALL))
+        .block(Block::default().title("Namespaces").borders(Borders::ALL))
         .style(get_border_style_from_selected_status(
             app.folders.current_selected,
         ))
@@ -179,7 +181,53 @@ where
         );
 
     f.render_widget(detail_command_paragraph, sub_chunks[1]);
+
+    // if app.get_mode() == Mode::Add {
+    //     match app.get_add_type() {
+    //         Some(t) => match t {
+    //             AddType::Command => (),
+    //             AddType::Namespace => (),
+    //         },
+    //         None => display_add_type_selector(f, chunks[0], sub_chunks[0]),
+    //     }
+    // }
 }
+
+// fn display_add_type_selector(f: &mut Frame<impl Backend>, chunks: Rect, sub_chunks: Rect) {
+//     let block = Block::default()
+//         .borders(Borders::ALL)
+//         .style(Style::default().fg(Color::White));
+//
+//     let area = centered_rect(70, 20, chunks[1]);
+//
+//     f.render_widget(Clear, area);
+//     f.render_widget(block, area);
+//
+//     let layout = Layout::default()
+//         .direction(Direction::Horizontal)
+//         .constraints([Constraint::Percentage(100)].as_ref())
+//         .margin(area.height / 3)
+//         .split(area);
+//
+//     let text = vec![
+//         Spans::from(Span::styled(
+//             app.confirmation_popup.message,
+//             Style::default().fg(Color::White),
+//         )),
+//         Spans::from(Span::raw("")),
+//         Spans::from(Span::styled(
+//             app.confirmation_popup.confirm,
+//             Style::default()
+//                 .add_modifier(Modifier::BOLD)
+//                 .fg(Color::Red)
+//                 .bg(Color::Gray),
+//         )),
+//     ];
+//
+//     let p = Paragraph::new(text).alignment(Alignment::Center);
+//
+//     f.render_widget(p, layout[0]);
+// }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let split_y = (100 - percent_y) / 2;

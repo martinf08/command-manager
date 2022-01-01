@@ -1,5 +1,4 @@
-use crate::app::{Mode, State};
-use crate::App;
+use crate::app::app::{App, Mode, State};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 
@@ -50,13 +49,19 @@ impl KeyParser {
             KeyCode::Char('a') => {
                 app.change_mode(Mode::Add);
                 Ok(None)
-            },
+            }
             _ => Ok(None),
         }
     }
 
     fn process_add_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
-        unimplemented!();
+        match key_code {
+            KeyCode::Esc => {
+                app.change_mode(Mode::Normal);
+                Ok(None)
+            }
+            _ => Ok(None),
+        }
     }
 
     fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
