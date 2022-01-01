@@ -1,13 +1,16 @@
 use crate::app::add::AddType;
 use crate::app::app::{App, Mode};
 
+use crate::ui::utils::{
+    get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
+};
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap};
+use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
-use crate::ui::utils::{centered_rect, get_border_style_from_selected_status, get_highlight_style, get_popup_layout};
+use crate::widget::button::Button;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -130,8 +133,7 @@ where
     );
 
     if app.show_command_confirmation {
-
-        let layout = get_popup_layout(f,chunks[1], Some(3));
+        let layout = get_popup_layout(f, chunks[1], Some(3));
 
         let text = vec![
             Spans::from(Span::styled(
@@ -177,18 +179,40 @@ where
                 AddType::Command => (),
                 AddType::Namespace => (),
             },
-            None => display_add_type_selector(f, chunks[1]),
+            None => display_add_type_selector(app, f, chunks[1]),
         }
     }
 }
 
-fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
+fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect) {
+    let rects = get_popup_layout(f, rect, Some(3));
 
-    let layout = get_popup_layout(f, rect, Some(3));
+    let layout = Layout::default()
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .direction(Direction::Horizontal)
+        .split(rects[0]);
 
-    let block = Block::default()
-        .style(Style::default().fg(Color::White));
-    f.render_widget(block, layout[0]);
+    let command= Button::new("Command")
+        .style(Style::default().fg(Color::Red))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Add type")
+                .style(Style::default().fg(Color::Yellow)),
+        ).alignment(Alignment::Center);
+
+
+    let namespace = Button::new("Namespace")
+        .style(Style::default().fg(Color::White))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Add type")
+                .style(Style::default().fg(Color::Yellow)),
+        ).alignment(Alignment::Center);
+
+    f.render_widget(command, layout[0]);
+    f.render_widget(namespace, layout[1]);
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)

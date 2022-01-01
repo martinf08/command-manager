@@ -157,6 +157,7 @@ impl<'a> App<'a> {
             add: Add::new(vec![&"Command", &"Namespace"]),
         }
     }
+
     pub fn set_commands_tags_from_position(&mut self, index: usize) {
         let folder = self.folders.items[index].clone();
         let (commands, tags) =

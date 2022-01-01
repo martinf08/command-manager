@@ -4,6 +4,7 @@ mod core;
 mod db;
 mod fixtures;
 mod ui;
+mod widget;
 
 use crate::app::app::App;
 use crate::cmd::Cmd;

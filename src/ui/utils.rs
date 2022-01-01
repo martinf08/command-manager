@@ -1,8 +1,8 @@
 use tui::backend::Backend;
-use tui::Frame;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Clear};
+use tui::Frame;
 
 pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let split_y = (100 - percent_y) / 2;
@@ -14,7 +14,7 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
                 Constraint::Percentage(percent_y),
                 Constraint::Percentage(split_y),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(r);
 
@@ -27,7 +27,7 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
                 Constraint::Percentage(percent_x),
                 Constraint::Percentage(split_x),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(popup_layout[1])[1]
 }
@@ -48,8 +48,8 @@ pub fn get_highlight_style() -> Style {
 }
 
 pub fn get_popup_layout<B>(f: &mut Frame<B>, rect: Rect, margin_ratio: Option<u8>) -> Vec<Rect>
-    where
-        B: Backend,
+where
+    B: Backend,
 {
     let block = Block::default()
         .title("Add entry")
