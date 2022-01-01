@@ -8,6 +8,7 @@ enum ConfirmMessage {
     Delete,
 }
 
+#[derive(PartialEq)]
 pub enum Mode {
     Add,
     Delete,

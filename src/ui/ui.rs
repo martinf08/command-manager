@@ -7,6 +7,7 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
+use crate::ui::utils::{centered_rect, get_border_style_from_selected_status, get_highlight_style, get_popup_layout};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -129,20 +130,8 @@ where
     );
 
     if app.show_command_confirmation {
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White));
 
-        let area = centered_rect(70, 20, chunks[1]);
-
-        f.render_widget(Clear, area);
-        f.render_widget(block, area);
-
-        let layout = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(100)].as_ref())
-            .margin(area.height / 3)
-            .split(area);
+        let layout = get_popup_layout(f,chunks[1], Some(3));
 
         let text = vec![
             Spans::from(Span::styled(
@@ -182,94 +171,24 @@ where
 
     f.render_widget(detail_command_paragraph, sub_chunks[1]);
 
-    // if app.get_mode() == Mode::Add {
-    //     match app.get_add_type() {
-    //         Some(t) => match t {
-    //             AddType::Command => (),
-    //             AddType::Namespace => (),
-    //         },
-    //         None => display_add_type_selector(f, chunks[0], sub_chunks[0]),
-    //     }
-    // }
-}
-
-// fn display_add_type_selector(f: &mut Frame<impl Backend>, chunks: Rect, sub_chunks: Rect) {
-//     let block = Block::default()
-//         .borders(Borders::ALL)
-//         .style(Style::default().fg(Color::White));
-//
-//     let area = centered_rect(70, 20, chunks[1]);
-//
-//     f.render_widget(Clear, area);
-//     f.render_widget(block, area);
-//
-//     let layout = Layout::default()
-//         .direction(Direction::Horizontal)
-//         .constraints([Constraint::Percentage(100)].as_ref())
-//         .margin(area.height / 3)
-//         .split(area);
-//
-//     let text = vec![
-//         Spans::from(Span::styled(
-//             app.confirmation_popup.message,
-//             Style::default().fg(Color::White),
-//         )),
-//         Spans::from(Span::raw("")),
-//         Spans::from(Span::styled(
-//             app.confirmation_popup.confirm,
-//             Style::default()
-//                 .add_modifier(Modifier::BOLD)
-//                 .fg(Color::Red)
-//                 .bg(Color::Gray),
-//         )),
-//     ];
-//
-//     let p = Paragraph::new(text).alignment(Alignment::Center);
-//
-//     f.render_widget(p, layout[0]);
-// }
-
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let split_y = (100 - percent_y) / 2;
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage(split_y),
-                Constraint::Percentage(percent_y),
-                Constraint::Percentage(split_y),
-            ]
-            .as_ref(),
-        )
-        .split(r);
-
-    let split_x = (100 - percent_x) / 2;
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage(split_x),
-                Constraint::Percentage(percent_x),
-                Constraint::Percentage(split_x),
-            ]
-            .as_ref(),
-        )
-        .split(popup_layout[1])[1]
-}
-
-fn get_border_style_from_selected_status(selected: bool) -> Style {
-    if selected {
-        return Style::default().fg(Color::White);
+    if *app.get_mode() == Mode::Add {
+        match &app.add.add_type {
+            Some(t) => match t {
+                AddType::Command => (),
+                AddType::Namespace => (),
+            },
+            None => display_add_type_selector(f, chunks[1]),
+        }
     }
-
-    Style::default().fg(Color::DarkGray)
 }
 
-fn get_highlight_style() -> Style {
-    Style::default()
-        .add_modifier(Modifier::BOLD)
-        .fg(Color::Red)
-        .bg(Color::Gray)
+fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
+
+    let layout = get_popup_layout(f, rect, Some(3));
+
+    let block = Block::default()
+        .style(Style::default().fg(Color::White));
+    f.render_widget(block, layout[0]);
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)

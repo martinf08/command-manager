@@ -1,5 +1,6 @@
 use crate::app::app::StatefulList;
 
+#[derive(Clone, PartialEq)]
 pub enum AddType {
     Command,
     Namespace,
@@ -16,9 +17,5 @@ impl<'a, T> Add<'a, T> {
             add_type: None,
             state: StatefulList::with_items(items),
         }
-    }
-
-    pub fn set_add_type(&mut self, add_type: AddType) {
-        self.add_type = Some(add_type);
     }
 }
