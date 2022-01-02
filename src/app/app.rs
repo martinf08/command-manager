@@ -1,5 +1,5 @@
 use crate::app::add::Add;
-use crate::db::{get_commands_and_tags, get_folders};
+use crate::db::{get_commands_and_tags, get_namespaces};
 use tui::widgets::ListState;
 
 enum ConfirmMessage {
@@ -126,7 +126,7 @@ pub struct App<'a> {
     pub mode: Mode,
     pub title: &'a str,
     pub tabs: TabsState<'a>,
-    pub folders: StatefulList<String>,
+    pub namespaces: StatefulList<String>,
     pub commands: StatefulList<String>,
     pub show_command_confirmation: bool,
     pub confirmation_popup: PopupContent<'a>,
@@ -137,7 +137,7 @@ pub struct App<'a> {
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str) -> Self {
-        let folders = get_folders().expect("Failed to get folders");
+        let namespaces = get_namespaces().expect("Failed to get namespaces");
         let (commands, tags) =
             get_commands_and_tags(None).expect("Failed to get commands and tags");
 
@@ -145,7 +145,7 @@ impl<'a> App<'a> {
             mode: Mode::Normal,
             title,
             tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
-            folders: StatefulList::with_items(folders),
+            namespaces: StatefulList::with_items(namespaces),
             commands: StatefulList::with_items(commands),
             show_command_confirmation: false,
             confirmation_popup: PopupContent::new(
@@ -159,15 +159,15 @@ impl<'a> App<'a> {
     }
 
     pub fn set_commands_tags_from_position(&mut self, index: usize) {
-        let folder = self.folders.items[index].clone();
+        let namespace = self.namespaces.items[index].clone();
         let (commands, tags) =
-            get_commands_and_tags(Some(folder)).expect("Failed to get commands and tags");
+            get_commands_and_tags(Some(namespace)).expect("Failed to get commands and tags");
         self.commands = StatefulList::with_items(commands);
         self.tags = StatefulList::with_items(tags);
     }
 
     pub fn switch_selected_widgets_off(&mut self) {
-        self.folders.current_selected = false;
+        self.namespaces.current_selected = false;
         self.commands.current_selected = false;
         self.tags.current_selected = false;
     }
@@ -193,19 +193,19 @@ impl<'a> App<'a> {
         self.tags.current_selected = value;
     }
 
-    pub fn switch_selected_folders_on(&mut self) {
-        self.folders.current_selected = true;
-        self.folders.state.select(Some(0));
-        self.set_commands_tags_from_position(self.folders.current());
+    pub fn switch_selected_namespaces_on(&mut self) {
+        self.namespaces.current_selected = true;
+        self.namespaces.state.select(Some(0));
+        self.set_commands_tags_from_position(self.namespaces.current());
     }
 
-    pub fn switch_selected_folders_off(&mut self) {
-        self.folders.current_selected = false;
-        self.folders.unselect();
+    pub fn switch_selected_namespaces_off(&mut self) {
+        self.namespaces.current_selected = false;
+        self.namespaces.unselect();
     }
 
-    pub fn set_current_selected_folder(&mut self, value: bool) {
-        self.folders.current_selected = value;
+    pub fn set_current_selected_namespace(&mut self, value: bool) {
+        self.namespaces.current_selected = value;
     }
 
     pub fn set_current_selected_tab(&mut self, value: bool) {

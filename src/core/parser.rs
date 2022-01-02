@@ -20,8 +20,8 @@ impl KeyParser {
 
         match app.tabs.index {
             0 => KeyParser::process_tab_0(key_code, app),
-            // 1 => KeyParser::process_tab_1(key_code, app),
-            // 2 => KeyParser::process_tab_2(key_code, app),
+            1 => KeyParser::process_tab_1(key_code, app),
+            2 => KeyParser::process_tab_2(key_code, app),
             _ => Ok(None),
         }
     }
@@ -38,6 +38,35 @@ impl KeyParser {
             Mode::Delete => KeyParser::process_delete_mode(key_code, app),
         }
     }
+
+    fn process_tab_1(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match key_code {
+            KeyCode::Right =>  {
+                app.tabs.next();
+                Ok(None)
+            }
+            KeyCode::Left => {
+                app.tabs.previous();
+                Ok(None)
+            },
+            _ => Ok(None),
+        }
+    }
+
+    fn process_tab_2(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match key_code {
+            KeyCode::Right =>  {
+                app.tabs.next();
+                Ok(None)
+            }
+            KeyCode::Left => {
+                app.tabs.previous();
+                Ok(None)
+            },
+            _ => Ok(None),
+        }
+    }
+
 
     fn process_normal_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
@@ -61,7 +90,7 @@ impl KeyParser {
                 app.change_mode(Mode::Normal);
                 Ok(None)
             }
-            _ => match app.add.add_type {
+            _ => match &app.add.add_type {
                 Some(t) => unimplemented!(),
                 None => match key_code {
                     KeyCode::Char('c') => {
@@ -83,7 +112,7 @@ impl KeyParser {
     }
 
     fn move_right(app: &mut App) -> ParserResult {
-        match app.folders.state.selected() {
+        match app.namespaces.state.selected() {
             Some(_) => {
                 app.switch_selected_widgets_off();
                 app.switch_selected_commands_tags_on()
@@ -98,11 +127,11 @@ impl KeyParser {
         match app.commands.state.selected() {
             Some(_) => {
                 app.switch_selected_commands_tags_off();
-                app.set_current_selected_folder(true)
+                app.set_current_selected_namespace(true)
             }
-            None => match app.folders.state.selected() {
+            None => match app.namespaces.state.selected() {
                 Some(_) => {
-                    app.switch_selected_folders_off();
+                    app.switch_selected_namespaces_off();
                     app.switch_selected_commands_tags_off();
                     app.set_current_selected_tab(true);
                 }
@@ -118,14 +147,14 @@ impl KeyParser {
                 app.commands.next();
                 app.tags.next();
             }
-            None => match app.folders.state.selected() {
+            None => match app.namespaces.state.selected() {
                 Some(_) => {
-                    app.folders.next();
-                    app.set_commands_tags_from_position(app.folders.current());
+                    app.namespaces.next();
+                    app.set_commands_tags_from_position(app.namespaces.current());
                 }
                 None => {
                     app.set_current_selected_tab(false);
-                    app.switch_selected_folders_on();
+                    app.switch_selected_namespaces_on();
                 }
             },
         }
@@ -140,8 +169,8 @@ impl KeyParser {
                 app.tags.previous();
             }
             None => {
-                app.folders.previous();
-                app.set_commands_tags_from_position(app.folders.current());
+                app.namespaces.previous();
+                app.set_commands_tags_from_position(app.namespaces.current());
             }
         };
 
@@ -162,9 +191,9 @@ impl KeyParser {
                     app.set_show_command_confirmation(true);
                 }
             },
-            None => match app.folders.state.selected() {
+            None => match app.namespaces.state.selected() {
                 Some(_) => {
-                    app.set_current_selected_folder(false);
+                    app.set_current_selected_namespace(false);
                     app.switch_selected_commands_tags_on();
                 }
                 None => {}
@@ -182,7 +211,7 @@ impl KeyParser {
             }
             false => {
                 app.switch_selected_commands_tags_off();
-                app.switch_selected_folders_off();
+                app.switch_selected_namespaces_off();
                 app.set_current_selected_tab(true);
             }
         }

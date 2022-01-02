@@ -12,40 +12,40 @@ pub fn db_fixtures(db: &str) -> Result<(), Box<dyn Error>> {
     // Navigation
     conn.execute_batch(
         "
-            INSERT OR IGNORE INTO folders (name) VALUES ('navigation');
-            INSERT OR IGNORE INTO commands (value, folder_id) VALUES (
+            INSERT OR IGNORE INTO namespaces (name) VALUES ('navigation');
+            INSERT OR IGNORE INTO commands (value, namespace_id) VALUES (
                 'cd ~/ && $SHELL',
-                (SELECT id FROM folders WHERE name = 'navigation')
+                (SELECT id FROM namespaces WHERE name = 'navigation')
             );
             INSERT OR IGNORE INTO tags ('name', command_id) VALUES (
                 'nav:home',
                 (
                     SELECT id FROM commands WHERE value = 'cd ~/ && $SHELL'
-                    AND folder_id = (SELECT id FROM folders WHERE name = 'navigation')
+                    AND namespace_id = (SELECT id FROM namespaces WHERE name = 'navigation')
                 )
             );
 
-            INSERT OR IGNORE INTO commands (value, folder_id) VALUES (
+            INSERT OR IGNORE INTO commands (value, namespace_id) VALUES (
                 'cd ~/.cargo/bin && $SHELL',
-                (SELECT id FROM folders WHERE name = 'navigation')
+                (SELECT id FROM namespaces WHERE name = 'navigation')
             );
             INSERT OR IGNORE INTO tags ('name', command_id) VALUES (
                 'nav:cargo:bin',
                 (
                     SELECT id FROM commands WHERE value = 'cd ~/.cargo/bin && $SHELL'
-                    AND folder_id = (SELECT id FROM folders WHERE name = 'navigation')
+                    AND namespace_id = (SELECT id FROM namespaces WHERE name = 'navigation')
                 )
             );
         ",
     )?;
 
     // Docker
-    conn.execute("INSERT OR IGNORE INTO folders (name) VALUES ('docker')", [])?;
+    conn.execute("INSERT OR IGNORE INTO namespaces (name) VALUES ('docker')", [])?;
 
     let docker_id = conn.last_insert_rowid();
 
     let mut cmd_stmt =
-        conn.prepare("INSERT OR IGNORE INTO commands (value, folder_id) VALUES (?, ?)")?;
+        conn.prepare("INSERT OR IGNORE INTO commands (value, namespace_id) VALUES (?, ?)")?;
 
     let mut tag_stmt =
         conn.prepare("INSERT OR IGNORE INTO tags (name, command_id) VALUES (?, ?)")?;

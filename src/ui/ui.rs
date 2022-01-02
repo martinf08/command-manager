@@ -75,12 +75,12 @@ where
         )
         .split(sub_chunks[0]);
 
-    let bloc = Block::default().title("Folders").borders(Borders::ALL);
+    let bloc = Block::default().title("namespaces").borders(Borders::ALL);
 
     f.render_widget(bloc, chunks[0]);
 
     let items = app
-        .folders
+        .namespaces
         .items
         .iter()
         .filter(|item| !item.trim().is_empty())
@@ -90,12 +90,12 @@ where
     let list = List::new(items)
         .block(Block::default().title("Namespaces").borders(Borders::ALL))
         .style(get_border_style_from_selected_status(
-            app.folders.current_selected,
+            app.namespaces.current_selected,
         ))
         .highlight_style(get_highlight_style())
         .highlight_symbol("⟩");
 
-    f.render_stateful_widget(list, chunks[0], &mut app.folders.state);
+    f.render_stateful_widget(list, chunks[0], &mut app.namespaces.state);
 
     let vec_to_style = |v: Vec<String>| -> Vec<ListItem> {
         v.into_iter()
