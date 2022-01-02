@@ -1,3 +1,4 @@
+use crate::app::add::AddType;
 use crate::app::app::{App, Mode, State};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
@@ -60,7 +61,20 @@ impl KeyParser {
                 app.change_mode(Mode::Normal);
                 Ok(None)
             }
-            _ => Ok(None),
+            _ => match app.add.add_type {
+                Some(t) => unimplemented!(),
+                None => match key_code {
+                    KeyCode::Char('c') => {
+                        app.add.add_type = Some(AddType::Command);
+                        Ok(None)
+                    }
+                    KeyCode::Char('n') => {
+                        app.add.add_type = Some(AddType::Namespace);
+                        Ok(None)
+                    }
+                    _ => Ok(None),
+                },
+            },
         }
     }
 

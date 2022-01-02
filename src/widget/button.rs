@@ -44,7 +44,9 @@ impl<'a> Widget for Button<'a> {
 
         let span_first_letter = Span::styled(
             first_letter,
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+            Style::default()
+                .fg(Color::Red)
+                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
         );
 
         let span_rest = Span::styled(rest, Style::default().fg(Color::White));

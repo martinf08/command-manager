@@ -4,13 +4,13 @@ use crate::app::app::{App, Mode};
 use crate::ui::utils::{
     get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
 };
+use crate::widget::button::Button;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
-use crate::widget::button::Button;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -192,15 +192,15 @@ fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: R
         .direction(Direction::Horizontal)
         .split(rects[0]);
 
-    let command= Button::new("Command")
+    let command = Button::new("Command")
         .style(Style::default().fg(Color::Red))
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Add type")
                 .style(Style::default().fg(Color::Yellow)),
-        ).alignment(Alignment::Center);
-
+        )
+        .alignment(Alignment::Center);
 
     let namespace = Button::new("Namespace")
         .style(Style::default().fg(Color::White))
@@ -209,7 +209,8 @@ fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: R
                 .borders(Borders::ALL)
                 .title("Add type")
                 .style(Style::default().fg(Color::Yellow)),
-        ).alignment(Alignment::Center);
+        )
+        .alignment(Alignment::Center);
 
     f.render_widget(command, layout[0]);
     f.render_widget(namespace, layout[1]);
