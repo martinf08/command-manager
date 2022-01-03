@@ -40,7 +40,10 @@ pub fn db_fixtures(db: &str) -> Result<(), Box<dyn Error>> {
     )?;
 
     // Docker
-    conn.execute("INSERT OR IGNORE INTO namespaces (name) VALUES ('docker')", [])?;
+    conn.execute(
+        "INSERT OR IGNORE INTO namespaces (name) VALUES ('docker')",
+        [],
+    )?;
 
     let docker_id = conn.last_insert_rowid();
 

@@ -1,7 +1,8 @@
-use crate::app::add::AddType;
-use crate::app::app::{App, Mode, State};
+use crate::app::add::{AddType, InputMode};
+use crate::app::app::{App, Mode, State, StatefulList};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
+use crate::db::{add_namespace, get_namespaces};
 
 pub struct KeyParser;
 
@@ -41,32 +42,31 @@ impl KeyParser {
 
     fn process_tab_1(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Right =>  {
+            KeyCode::Right => {
                 app.tabs.next();
                 Ok(None)
             }
             KeyCode::Left => {
                 app.tabs.previous();
                 Ok(None)
-            },
+            }
             _ => Ok(None),
         }
     }
 
     fn process_tab_2(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Right =>  {
+            KeyCode::Right => {
                 app.tabs.next();
                 Ok(None)
             }
             KeyCode::Left => {
                 app.tabs.previous();
                 Ok(None)
-            },
+            }
             _ => Ok(None),
         }
     }
-
 
     fn process_normal_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
@@ -91,7 +91,13 @@ impl KeyParser {
                 Ok(None)
             }
             _ => match &app.add.add_type {
-                Some(t) => unimplemented!(),
+                Some(t) => {
+                    match app.add.input_mode {
+                        Some(InputMode::Namespace) => KeyParser::process_add_namespace(key_code, app),
+                        Some(InputMode::Command) => unimplemented!(),
+                        None => unreachable!(),
+                    }
+                },
                 None => match key_code {
                     KeyCode::Char('c') => {
                         app.add.add_type = Some(AddType::Command);
@@ -99,6 +105,8 @@ impl KeyParser {
                     }
                     KeyCode::Char('n') => {
                         app.add.add_type = Some(AddType::Namespace);
+                        app.add.input_mode = Some(InputMode::Namespace);
+
                         Ok(None)
                     }
                     _ => Ok(None),
@@ -217,5 +225,39 @@ impl KeyParser {
         }
 
         Ok(None)
+    }
+
+    fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match key_code {
+            KeyCode::Esc => {
+                app.add.add_type = None;
+                app.mode = Mode::Normal;
+                Ok(None)
+            }
+            KeyCode::Char(c) => {
+                app.add.input.push(c);
+                Ok(None)
+            },
+            KeyCode::Backspace => {
+                app.add.input.pop();
+                Ok(None)
+            },
+            KeyCode::Enter => {
+                match app.add.add_type {
+                    Some(AddType::Namespace) => {
+                        let namespace = app.add.input.clone();
+                        app.add.input.clear();
+                        add_namespace(namespace);
+                        app.add.add_type = None;
+                        app.mode = Mode::Normal;
+                        let namespaces = get_namespaces().expect("Failed to get namespaces");
+                        app.namespaces = StatefulList::with_items(namespaces);
+                        Ok(None)
+                    }
+                    _ => Ok(None),
+                }
+            },
+            _ => Ok(None)
+        }
     }
 }

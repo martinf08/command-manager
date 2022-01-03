@@ -5,7 +5,10 @@ struct Choose<'a, T: 'a> {
 
 impl<'a, T> Choose<'a, T> {
     pub fn new(items: Vec<&'a T>) -> Self {
-        Choose { items, offset: 0 }
+        Choose {
+            items,
+            offset: 0,
+        }
     }
 }
 
@@ -15,9 +18,16 @@ pub enum AddType {
     Namespace,
 }
 
+pub enum InputMode {
+    Command,
+    Namespace,
+}
+
 pub struct Add<'a, T: 'a> {
     pub add_type: Option<AddType>,
     pub items: Vec<&'a T>,
+    pub input_mode: Option<InputMode>,
+    pub input: String,
 }
 
 impl<'a, T> Add<'a, T> {
@@ -25,6 +35,8 @@ impl<'a, T> Add<'a, T> {
         Add {
             add_type: None,
             items,
+            input_mode: None,
+            input: String::new(),
         }
     }
 }

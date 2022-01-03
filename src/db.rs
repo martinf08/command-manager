@@ -66,6 +66,16 @@ fn create_db_structure(db: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+pub fn add_namespace(s: String) -> Result<(), Box<dyn Error>>{
+    let db = get_db()?;
+    let conn = Connection::open(db)?;
+
+    let mut stmt = conn.prepare("INSERT INTO namespaces (name) VALUES (?)")?;
+    stmt.execute([s]);
+
+    Ok(())
+}
+
 pub fn get_namespaces() -> Result<Vec<String>, Box<dyn Error>> {
     let db = get_db()?;
     let conn = Connection::open(db)?;

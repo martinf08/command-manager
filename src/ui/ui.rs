@@ -1,4 +1,4 @@
-use crate::app::add::AddType;
+use crate::app::add::{AddType, InputMode};
 use crate::app::app::{App, Mode};
 
 use crate::ui::utils::{
@@ -156,7 +156,7 @@ where
     }
 
     let mut command_text = "\n".to_string();
-    if app.commands.state.selected().is_some() {
+    if app.commands.state.selected().is_some() && app.commands.items.len() > 0 {
         command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
     }
 
@@ -177,11 +177,38 @@ where
         match &app.add.add_type {
             Some(t) => match t {
                 AddType::Command => (),
-                AddType::Namespace => (),
+                AddType::Namespace => {
+                    match app.add.input_mode {
+                        Some(InputMode::Namespace) => display_add_namespace_input(app, f, chunks[1]),
+                        Some(InputMode::Command) => (),
+                        None => {
+                            app.add.input_mode = Some(InputMode::Namespace);
+                        }
+                    }
+                },
             },
             None => display_add_type_selector(app, f, chunks[1]),
         }
     }
+}
+
+fn display_add_namespace_input(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
+    let rects = get_popup_layout(f, chunk, Some(3));
+
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(1)].as_ref())
+        .margin(1)
+        .split(rects[0]);
+
+    let p = Paragraph::new(app.add.input.clone()).block(
+        Block::default()
+            .style(Style::default().fg(Color::White)),
+    ).style(Style::default().fg(Color::Yellow));
+
+    f.set_cursor(chunks[0].x + app.add.input.len() as u16, chunks[0].y);
+
+    f.render_widget(p, chunks[0]);
 }
 
 fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect) {
