@@ -129,21 +129,23 @@ pub struct CursorPosition {
     pub x: usize,
     pub y: usize,
     pub width: usize,
+    pub input: String,
 }
 
 impl CursorPosition {
-    pub fn new(x: usize, y: usize, width: usize) -> Self {
+    pub fn new(x: usize, y: usize, width: usize, input: String) -> Self {
         CursorPosition {
             initial_x: x,
             initial_y: y,
             x,
             y,
             width,
+            input,
         }
     }
 
-    pub fn inc(&mut self) {
-        if self.x < self.width.saturating_sub(1) {
+    fn inc(&mut self) {
+        if self.input.len() % self.width.saturating_sub(1) != 0 {
             self.x += 1;
         } else {
             self.x = self.initial_x;
@@ -151,13 +153,25 @@ impl CursorPosition {
         }
     }
 
-    pub fn dec(&mut self) {
-        if self.x > self.initial_y {
+    fn dec(&mut self) {
+        if self.input.len() > self.initial_x && self.y >= self.initial_y {
             self.x.saturating_sub(1);
+        } else if (self.x <= self.initial_x) && (self.y <= self.initial_y) {
+           return;
         } else {
-            self.x = self.width.saturating_sub(1);
+            self.x = self.x.saturating_sub(1);
             self.y.saturating_sub(1);
         }
+    }
+
+    pub fn push_inc(&mut self, c: char) {
+        self.input.push(c);
+        self.inc();
+    }
+
+    pub fn pop_dec(&mut self) {
+        self.input.pop();
+        self.dec();
     }
 }
 

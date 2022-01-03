@@ -192,11 +192,11 @@ where
 }
 
 fn display_add_namespace_input(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
-    let rects = get_popup_layout(f, chunk, Some(3), Some((100, 50)));
+    let rects = get_popup_layout(f, chunk, None, Some((100, 100)));
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(1)].as_ref())
+        .constraints([Constraint::Percentage(100)].as_ref())
         .margin(1)
         .split(rects[0]);
 

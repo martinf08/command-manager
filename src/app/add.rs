@@ -25,6 +25,7 @@ pub struct Add<'a, T: 'a> {
     pub items: Vec<&'a T>,
     pub input_mode: Option<InputMode>,
     pub input: String,
+    pub error_message: Option<String>,
 }
 
 impl<'a, T> Add<'a, T> {
@@ -34,6 +35,7 @@ impl<'a, T> Add<'a, T> {
             items,
             input_mode: None,
             input: String::new(),
+            error_message: None,
         }
     }
 }

@@ -66,7 +66,7 @@ fn create_db_structure(db: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn add_namespace(s: String) -> Result<(), Box<dyn Error>> {
+pub fn add_namespace(s: &String) -> Result<(), Box<dyn Error>> {
     let db = get_db()?;
     let conn = Connection::open(db)?;
 
@@ -89,6 +89,29 @@ pub fn get_namespaces() -> Result<Vec<String>, Box<dyn Error>> {
     }
 
     Ok(namespaces)
+}
+
+pub fn get_namespace(s: &String) -> Result<Option<String>, Box<dyn Error>> {
+    let db = get_db()?;
+    let conn = Connection::open(db)?;
+
+    let mut stmt = conn.prepare("SELECT name FROM namespaces WHERE name = ?")?;
+    let mut rows = stmt.query([s])?;
+
+    let mut namespace = None;
+    if let Ok(row) = rows.next() {
+        namespace = if row.is_none() {
+           None
+        } else {
+            Some(row.ok_or("Unable to get row")?.get(0)?)
+        };
+    }
+
+    if namespace.is_none() {
+        return Ok(None);
+    }
+
+    Ok(namespace)
 }
 
 pub fn get_commands_and_tags(
