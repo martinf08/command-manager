@@ -5,10 +5,7 @@ struct Choose<'a, T: 'a> {
 
 impl<'a, T> Choose<'a, T> {
     pub fn new(items: Vec<&'a T>) -> Self {
-        Choose {
-            items,
-            offset: 0,
-        }
+        Choose { items, offset: 0 }
     }
 }
 

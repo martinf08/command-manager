@@ -66,7 +66,7 @@ fn create_db_structure(db: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn add_namespace(s: String) -> Result<(), Box<dyn Error>>{
+pub fn add_namespace(s: String) -> Result<(), Box<dyn Error>> {
     let db = get_db()?;
     let conn = Connection::open(db)?;
 

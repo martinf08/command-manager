@@ -3,6 +3,7 @@ use crate::app::app::{App, Mode};
 
 use crate::ui::utils::{
     get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
+    set_cursor_position,
 };
 use crate::widget::button::Button;
 use tui::backend::Backend;
@@ -133,7 +134,7 @@ where
     );
 
     if app.show_command_confirmation {
-        let layout = get_popup_layout(f, chunks[1], Some(3));
+        let layout = get_popup_layout(f, chunks[1], Some(3), None);
 
         let text = vec![
             Spans::from(Span::styled(
@@ -177,13 +178,11 @@ where
         match &app.add.add_type {
             Some(t) => match t {
                 AddType::Command => (),
-                AddType::Namespace => {
-                    match app.add.input_mode {
-                        Some(InputMode::Namespace) => display_add_namespace_input(app, f, chunks[1]),
-                        Some(InputMode::Command) => (),
-                        None => {
-                            app.add.input_mode = Some(InputMode::Namespace);
-                        }
+                AddType::Namespace => match app.add.input_mode {
+                    Some(InputMode::Namespace) => display_add_namespace_input(app, f, chunks[1]),
+                    Some(InputMode::Command) => (),
+                    None => {
+                        app.add.input_mode = Some(InputMode::Namespace);
                     }
                 },
             },
@@ -193,7 +192,7 @@ where
 }
 
 fn display_add_namespace_input(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
-    let rects = get_popup_layout(f, chunk, Some(3));
+    let rects = get_popup_layout(f, chunk, Some(3), Some((100, 50)));
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -201,18 +200,18 @@ fn display_add_namespace_input(app: &mut App, f: &mut Frame<impl Backend>, chunk
         .margin(1)
         .split(rects[0]);
 
-    let p = Paragraph::new(app.add.input.clone()).block(
-        Block::default()
-            .style(Style::default().fg(Color::White)),
-    ).style(Style::default().fg(Color::Yellow));
+    let p = Paragraph::new(app.add.input.clone())
+        .block(Block::default().style(Style::default().fg(Color::White)))
+        .style(Style::default().fg(Color::Yellow))
+        .wrap(Wrap { trim: true });
 
-    f.set_cursor(chunks[0].x + app.add.input.len() as u16, chunks[0].y);
+    set_cursor_position(app, f, chunks[0], app.add.input.clone());
 
     f.render_widget(p, chunks[0]);
 }
 
 fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect) {
-    let rects = get_popup_layout(f, rect, Some(3));
+    let rects = get_popup_layout(f, rect, Some(3), None);
 
     let layout = Layout::default()
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())

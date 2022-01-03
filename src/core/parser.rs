@@ -1,8 +1,8 @@
 use crate::app::add::{AddType, InputMode};
-use crate::app::app::{App, Mode, State, StatefulList};
+use crate::app::app::{App, CursorPosition, Mode, State, StatefulList};
+use crate::db::{add_namespace, get_namespaces};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
-use crate::db::{add_namespace, get_namespaces};
 
 pub struct KeyParser;
 
@@ -91,12 +91,10 @@ impl KeyParser {
                 Ok(None)
             }
             _ => match &app.add.add_type {
-                Some(t) => {
-                    match app.add.input_mode {
-                        Some(InputMode::Namespace) => KeyParser::process_add_namespace(key_code, app),
-                        Some(InputMode::Command) => unimplemented!(),
-                        None => unreachable!(),
-                    }
+                Some(t) => match app.add.input_mode {
+                    Some(InputMode::Namespace) => KeyParser::process_add_namespace(key_code, app),
+                    Some(InputMode::Command) => unimplemented!(),
+                    None => unreachable!(),
                 },
                 None => match key_code {
                     KeyCode::Char('c') => {
@@ -236,28 +234,28 @@ impl KeyParser {
             }
             KeyCode::Char(c) => {
                 app.add.input.push(c);
+                app.cursor_position.as_mut().unwrap().inc();
                 Ok(None)
-            },
+            }
             KeyCode::Backspace => {
                 app.add.input.pop();
+                app.cursor_position.as_mut().unwrap().dec();
                 Ok(None)
-            },
-            KeyCode::Enter => {
-                match app.add.add_type {
-                    Some(AddType::Namespace) => {
-                        let namespace = app.add.input.clone();
-                        app.add.input.clear();
-                        add_namespace(namespace);
-                        app.add.add_type = None;
-                        app.mode = Mode::Normal;
-                        let namespaces = get_namespaces().expect("Failed to get namespaces");
-                        app.namespaces = StatefulList::with_items(namespaces);
-                        Ok(None)
-                    }
-                    _ => Ok(None),
+            }
+            KeyCode::Enter => match app.add.add_type {
+                Some(AddType::Namespace) => {
+                    let namespace = app.add.input.clone();
+                    app.add.input.clear();
+                    add_namespace(namespace);
+                    app.add.add_type = None;
+                    app.mode = Mode::Normal;
+                    let namespaces = get_namespaces().expect("Failed to get namespaces");
+                    app.namespaces = StatefulList::with_items(namespaces);
+                    Ok(None)
                 }
+                _ => Ok(None),
             },
-            _ => Ok(None)
+            _ => Ok(None),
         }
     }
 }

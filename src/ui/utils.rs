@@ -1,3 +1,5 @@
+use crate::app::app::CursorPosition;
+use crate::App;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -47,7 +49,12 @@ pub fn get_highlight_style() -> Style {
         .bg(Color::Gray)
 }
 
-pub fn get_popup_layout<B>(f: &mut Frame<B>, rect: Rect, margin_ratio: Option<u8>) -> Vec<Rect>
+pub fn get_popup_layout<B>(
+    f: &mut Frame<B>,
+    rect: Rect,
+    margin_ratio: Option<u8>,
+    rect_dimensions: Option<(u16, u16)>,
+) -> Vec<Rect>
 where
     B: Backend,
 {
@@ -56,7 +63,11 @@ where
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::White));
 
-    let area = centered_rect(70, 20, rect);
+    let area = if let Some((percent_x, percent_y)) = rect_dimensions {
+        centered_rect(percent_x, percent_y, rect)
+    } else {
+        centered_rect(70, 20, rect)
+    };
 
     f.render_widget(Clear, area);
     f.render_widget(block, area);
@@ -72,4 +83,19 @@ where
     }
 
     layout.split(area)
+}
+
+pub fn set_cursor_position(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect, input: String) {
+    if app.cursor_position.is_none() {
+        app.cursor_position = Some(CursorPosition::new(
+            (rect.x + 1) as usize,
+            rect.y as usize,
+            rect.width as usize,
+        ));
+    }
+
+    f.set_cursor(
+        app.cursor_position.as_ref().unwrap().x as u16,
+        app.cursor_position.as_ref().unwrap().y as u16,
+    )
 }

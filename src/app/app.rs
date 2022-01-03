@@ -122,6 +122,45 @@ impl<'a> PopupContent<'a> {
     }
 }
 
+#[derive(Debug)]
+pub struct CursorPosition {
+    initial_x: usize,
+    initial_y: usize,
+    pub x: usize,
+    pub y: usize,
+    pub width: usize,
+}
+
+impl CursorPosition {
+    pub fn new(x: usize, y: usize, width: usize) -> Self {
+        CursorPosition {
+            initial_x: x,
+            initial_y: y,
+            x,
+            y,
+            width,
+        }
+    }
+
+    pub fn inc(&mut self) {
+        if self.x < self.width.saturating_sub(1) {
+            self.x += 1;
+        } else {
+            self.x = self.initial_x;
+            self.y += 1;
+        }
+    }
+
+    pub fn dec(&mut self) {
+        if self.x > self.initial_y {
+            self.x.saturating_sub(1);
+        } else {
+            self.x = self.width.saturating_sub(1);
+            self.y.saturating_sub(1);
+        }
+    }
+}
+
 pub struct App<'a> {
     pub mode: Mode,
     pub title: &'a str,
@@ -133,6 +172,7 @@ pub struct App<'a> {
     pub tags: StatefulList<String>,
     pub quit: bool,
     pub add: Add<'a, &'a str>,
+    pub cursor_position: Option<CursorPosition>,
 }
 
 impl<'a> App<'a> {
@@ -155,6 +195,7 @@ impl<'a> App<'a> {
             tags: StatefulList::with_items(tags),
             quit: false,
             add: Add::new(vec![&"Command", &"Namespace"]),
+            cursor_position: None,
         }
     }
 
