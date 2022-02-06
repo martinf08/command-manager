@@ -151,8 +151,10 @@ impl KeyParser {
     fn move_down(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => {
-                app.commands.next();
-                app.tags.next();
+                if !app.commands.items.is_empty() {
+                    app.commands.next();
+                    app.tags.next();
+                }
             }
             None => match app.namespaces.state.selected() {
                 Some(_) => {
@@ -172,8 +174,10 @@ impl KeyParser {
     fn move_up(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => {
-                app.commands.previous();
-                app.tags.previous();
+                if !app.commands.items.is_empty() {
+                    app.commands.previous();
+                    app.tags.previous();
+                }
             }
             None => {
                 app.namespaces.previous();
