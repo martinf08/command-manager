@@ -14,7 +14,8 @@ impl KeyParser {
     }
 
     fn process_key_code(key_code: KeyCode, app: &mut App) -> ParserResult {
-        if key_code == KeyCode::Char('q') {
+        if key_code == KeyCode::Char('q')
+            && (app.mode == Mode::Normal || app.mode == Mode::Delete) {
             KeyParser::quit(app)?;
             return Ok(None);
         }
@@ -244,7 +245,10 @@ impl KeyParser {
             }
             KeyCode::Enter => match app.add.add_type {
                 Some(AddType::Namespace) => {
-                    let namespace = app.add.input.clone();
+                    if app.add.input.is_empty() {
+                        return Ok(None);
+                    }
+
                     let existing_namespace = get_namespace(&app.add.input);
 
                     if let Ok(option) = existing_namespace {
@@ -256,13 +260,16 @@ impl KeyParser {
                         }
                     }
 
-                    app.add.input.clear();
                     add_namespace(&app.add.input);
+
+                    app.add.input.clear();
                     app.add.add_type = None;
                     app.mode = Mode::Normal;
+
                     let namespaces = get_namespaces().expect("Failed to get namespaces");
                     app.namespaces = StatefulList::with_items(namespaces);
                     app.cursor_position = None;
+
                     Ok(None)
                 }
                 _ => Ok(None),
