@@ -89,6 +89,7 @@ impl KeyParser {
         match key_code {
             KeyCode::Esc => {
                 app.change_mode(Mode::Normal);
+                app.add.add_type = None;
                 Ok(None)
             }
             _ => match &app.add.add_type {
