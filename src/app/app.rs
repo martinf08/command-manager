@@ -109,6 +109,10 @@ impl<T> StatefulList<T> {
             None => 0,
         }
     }
+
+    pub fn current_item(&self) -> &T {
+        &self.items[self.current()]
+    }
 }
 
 pub struct PopupContent<'a> {
@@ -157,7 +161,7 @@ impl CursorPosition {
         if self.input.len() > self.initial_x && self.y >= self.initial_y {
             self.x.saturating_sub(1);
         } else if (self.x <= self.initial_x) && (self.y <= self.initial_y) {
-           return;
+            return;
         } else {
             self.x = self.x.saturating_sub(1);
             self.y.saturating_sub(1);

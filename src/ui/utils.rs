@@ -89,7 +89,7 @@ where
 pub fn set_cursor_position(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect, input: String) {
     if app.cursor_position.is_none() {
         app.cursor_position = Some(CursorPosition::new(
-            rect.x  as usize,
+            rect.x as usize,
             rect.y as usize,
             rect.width as usize,
             input.clone(),

@@ -1,6 +1,6 @@
 use crate::app::add::{AddType, InputMode};
 use crate::app::app::{App, CursorPosition, Mode, State, StatefulList};
-use crate::db::{add_namespace, get_namespace, get_namespaces};
+use crate::db::{add_command, add_namespace, get_commands_and_tags, get_namespace, get_namespaces};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 
@@ -14,8 +14,8 @@ impl KeyParser {
     }
 
     fn process_key_code(key_code: KeyCode, app: &mut App) -> ParserResult {
-        if key_code == KeyCode::Char('q')
-            && (app.mode == Mode::Normal || app.mode == Mode::Delete) {
+        if key_code == KeyCode::Char('q') && (app.mode == Mode::Normal || app.mode == Mode::Delete)
+        {
             KeyParser::quit(app)?;
             return Ok(None);
         }
@@ -100,15 +100,16 @@ impl KeyParser {
                 },
                 None => match key_code {
                     KeyCode::Char('c') => {
-                        app.add.add_type = Some(AddType::Command);
-                        app.add.input_mode = Some(InputMode::Command);
+                        if app.namespaces.current_selected {
+                            app.add.add_type = Some(AddType::Command);
+                            app.add.input_mode = Some(InputMode::Command);
+                        }
+
                         Ok(None)
                     }
                     KeyCode::Char('n') => {
-                        if app.namespaces.state.selected().is_some() {
-                            app.add.add_type = Some(AddType::Namespace);
-                            app.add.input_mode = Some(InputMode::Namespace);
-                        }
+                        app.add.add_type = Some(AddType::Namespace);
+                        app.add.input_mode = Some(InputMode::Namespace);
 
                         Ok(None)
                     }
@@ -252,8 +253,13 @@ impl KeyParser {
         }
     }
 
-    fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
+    fn clear_mode(app: &mut App) -> () {
+        app.add.input.clear();
+        app.add.add_type = None;
+        app.mode = Mode::Normal;
+    }
 
+    fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
         KeyParser::input_handler(key_code, app);
 
         if key_code == KeyCode::Enter {
@@ -275,10 +281,7 @@ impl KeyParser {
                     }
 
                     add_namespace(&app.add.input);
-
-                    app.add.input.clear();
-                    app.add.add_type = None;
-                    app.mode = Mode::Normal;
+                    KeyParser::clear_mode(app);
 
                     let namespaces = get_namespaces().expect("Failed to get namespaces");
                     app.namespaces = StatefulList::with_items(namespaces);
@@ -287,15 +290,32 @@ impl KeyParser {
                     Ok(None)
                 }
                 _ => Ok(None),
-            }
+            };
         }
         Ok(None)
     }
 
     fn process_add_command(key_code: KeyCode, app: &mut App) -> ParserResult {
-
         KeyParser::input_handler(key_code, app);
-        Ok(None)
 
+        if key_code == KeyCode::Enter {
+            if app.add.input.is_empty() {
+                return Ok(None);
+            }
+
+            add_command(&app.add.input, app.namespaces.current_item());
+            KeyParser::clear_mode(app);
+
+            let (commands, tags) =
+                get_commands_and_tags(Some(app.namespaces.current_item().clone()))
+                    .expect("Failed to get commands and tags");
+            dbg!(&commands);
+
+            app.commands = StatefulList::with_items(commands);
+            app.tags = StatefulList::with_items(tags);
+            app.cursor_position = None;
+        }
+
+        Ok(None)
     }
 }

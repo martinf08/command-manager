@@ -101,7 +101,7 @@ pub fn get_namespace(s: &String) -> Result<Option<String>, Box<dyn Error>> {
     let mut namespace = None;
     if let Ok(row) = rows.next() {
         namespace = if row.is_none() {
-           None
+            None
         } else {
             Some(row.ok_or("Unable to get row")?.get(0)?)
         };
@@ -165,4 +165,18 @@ pub fn get_commands_and_tags(
     }
 
     Ok((commands, tags))
+}
+
+pub fn add_command(command: &String, namespace: &String) -> Result<(), Box<dyn Error>> {
+    let db = get_db()?;
+    let conn = Connection::open(db)?;
+
+    let mut stmt = conn.prepare(
+        r"
+        INSERT INTO commands (value, namespace_id)
+        VALUES (:command, (SELECT id FROM namespaces WHERE name = :namespace));",
+    )?;
+
+    stmt.execute([command, namespace])?;
+    Ok(())
 }
