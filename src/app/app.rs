@@ -2,12 +2,6 @@ use crate::app::add::Add;
 use crate::db::{get_commands_and_tags, get_namespaces};
 use tui::widgets::ListState;
 
-enum ConfirmMessage {
-    Add,
-    Command,
-    Delete,
-}
-
 #[derive(PartialEq)]
 pub enum Mode {
     Add,
@@ -159,12 +153,12 @@ impl CursorPosition {
 
     fn dec(&mut self) {
         if self.input.len() > self.initial_x && self.y >= self.initial_y {
-            self.x.saturating_sub(1);
+            self.x = self.x.saturating_sub(1);
         } else if (self.x <= self.initial_x) && (self.y <= self.initial_y) {
             return;
         } else {
             self.x = self.x.saturating_sub(1);
-            self.y.saturating_sub(1);
+            self.y = self.y.saturating_sub(1);
         }
     }
 

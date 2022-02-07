@@ -10,7 +10,7 @@ use crate::app::app::App;
 use crate::cmd::Cmd;
 use crate::core::run;
 
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::event::DisableMouseCapture;
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,

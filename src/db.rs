@@ -167,7 +167,11 @@ pub fn get_commands_and_tags(
     Ok((commands, tags))
 }
 
-pub fn add_command(command: &String, namespace: &String) -> Result<(), Box<dyn Error>> {
+pub fn add_command_and_tag(
+    command: Option<&String>,
+    tag: &String,
+    namespace: &String,
+) -> Result<(), Box<dyn Error>> {
     let db = get_db()?;
     let conn = Connection::open(db)?;
 
@@ -177,6 +181,14 @@ pub fn add_command(command: &String, namespace: &String) -> Result<(), Box<dyn E
         VALUES (:command, (SELECT id FROM namespaces WHERE name = :namespace));",
     )?;
 
-    stmt.execute([command, namespace])?;
+    stmt.execute([command, Some(namespace)])?;
+
+    let mut stmt = conn.prepare(
+        r"
+        INSERT INTO tags (name, command_id)
+        VALUES (:tag, (SELECT id FROM commands WHERE value = :command));",
+    )?;
+
+    stmt.execute([tag, command.unwrap()])?;
     Ok(())
 }

@@ -1,6 +1,8 @@
 use crate::app::add::{AddType, InputMode};
-use crate::app::app::{App, CursorPosition, Mode, State, StatefulList};
-use crate::db::{add_command, add_namespace, get_commands_and_tags, get_namespace, get_namespaces};
+use crate::app::app::{App, Mode, State, StatefulList};
+use crate::db::{
+    add_command_and_tag, add_namespace, get_commands_and_tags, get_namespace, get_namespaces,
+};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 
@@ -95,8 +97,10 @@ impl KeyParser {
             _ => match &app.add.add_type {
                 Some(_) => match app.add.input_mode {
                     Some(InputMode::Namespace) => KeyParser::process_add_namespace(key_code, app),
-                    Some(InputMode::Command) => KeyParser::process_add_command(key_code, app),
-                    None => unreachable!(),
+                    Some(InputMode::Command) | Some(InputMode::Tag) => {
+                        KeyParser::process_add_command(key_code, app)
+                    }
+                    _ => unreachable!(),
                 },
                 None => match key_code {
                     KeyCode::Char('c') => {
@@ -119,7 +123,7 @@ impl KeyParser {
         }
     }
 
-    fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+    fn process_delete_mode(_key_code: KeyCode, _app: &mut App) -> ParserResult {
         unimplemented!()
     }
 
@@ -255,6 +259,7 @@ impl KeyParser {
 
     fn clear_mode(app: &mut App) -> () {
         app.add.input.clear();
+        app.add.input_command = None;
         app.add.add_type = None;
         app.mode = Mode::Normal;
     }
@@ -280,7 +285,7 @@ impl KeyParser {
                         }
                     }
 
-                    add_namespace(&app.add.input);
+                    add_namespace(&app.add.input).expect("Failed to add namespace");
                     KeyParser::clear_mode(app);
 
                     let namespaces = get_namespaces().expect("Failed to get namespaces");
@@ -303,13 +308,29 @@ impl KeyParser {
                 return Ok(None);
             }
 
-            add_command(&app.add.input, app.namespaces.current_item());
-            KeyParser::clear_mode(app);
+            match app.add.input_mode {
+                Some(InputMode::Command) => {
+                    app.add.input_command = Some(app.add.input.clone());
+                    app.add.input.clear();
+                    app.add.input_mode = Some(InputMode::Tag);
+                }
+                Some(InputMode::Tag) => {
+                    app.add.input_mode = None;
+                    add_command_and_tag(
+                        app.add.input_command.as_ref(),
+                        &app.add.input,
+                        &app.namespaces.current_item(),
+                    )
+                    .expect("Failed to add command and tag");
+
+                    KeyParser::clear_mode(app);
+                }
+                _ => (),
+            }
 
             let (commands, tags) =
                 get_commands_and_tags(Some(app.namespaces.current_item().clone()))
                     .expect("Failed to get commands and tags");
-            dbg!(&commands);
 
             app.commands = StatefulList::with_items(commands);
             app.tags = StatefulList::with_items(tags);

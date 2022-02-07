@@ -2,10 +2,9 @@ use tui::buffer::Buffer;
 use tui::layout::{Alignment, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Widget};
+use tui::widgets::Widget;
 
 pub struct Button<'a> {
-    block: Option<Block<'a>>,
     text: &'a str,
     style: Style,
     alignement: Alignment,
@@ -14,16 +13,10 @@ pub struct Button<'a> {
 impl<'a> Button<'a> {
     pub fn new(text: &'a str) -> Self {
         Button {
-            block: None,
             text,
             style: Style::default(),
             alignement: Alignment::Center,
         }
-    }
-
-    pub fn block(mut self, block: Block<'a>) -> Self {
-        self.block = Some(block);
-        self
     }
 
     pub fn style(mut self, style: Style) -> Self {

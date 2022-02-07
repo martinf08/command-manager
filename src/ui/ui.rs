@@ -164,11 +164,19 @@ where
     if *app.get_mode() == Mode::Add {
         match &app.add.add_type {
             Some(t) => match t {
-                AddType::Command => {
-                    if app.namespaces.state.selected().is_some() {
-                        display_add_input_area(app, f, chunks[1])
+                AddType::Command => match app.add.input_mode {
+                    Some(InputMode::Command) | Some(InputMode::Tag) => {
+                        if app.namespaces.state.selected().is_some() {
+                            if app.add.input_mode == Some(InputMode::Command) {
+                                command_text.push_str("Type the command");
+                            } else {
+                                command_text.push_str("Type the tag");
+                            }
+                            display_add_input_area(app, f, chunks[1])
+                        }
                     }
-                }
+                    _ => (),
+                },
                 AddType::Namespace => {
                     if let Some(InputMode::Namespace) = app.add.input_mode {
                         display_add_input_area(app, f, chunks[1])
