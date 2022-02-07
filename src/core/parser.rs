@@ -93,19 +93,22 @@ impl KeyParser {
                 Ok(None)
             }
             _ => match &app.add.add_type {
-                Some(t) => match app.add.input_mode {
+                Some(_) => match app.add.input_mode {
                     Some(InputMode::Namespace) => KeyParser::process_add_namespace(key_code, app),
-                    Some(InputMode::Command) => unimplemented!(),
+                    Some(InputMode::Command) => KeyParser::process_add_command(key_code, app),
                     None => unreachable!(),
                 },
                 None => match key_code {
                     KeyCode::Char('c') => {
                         app.add.add_type = Some(AddType::Command);
+                        app.add.input_mode = Some(InputMode::Command);
                         Ok(None)
                     }
                     KeyCode::Char('n') => {
-                        app.add.add_type = Some(AddType::Namespace);
-                        app.add.input_mode = Some(InputMode::Namespace);
+                        if app.namespaces.state.selected().is_some() {
+                            app.add.add_type = Some(AddType::Namespace);
+                            app.add.input_mode = Some(InputMode::Namespace);
+                        }
 
                         Ok(None)
                     }
@@ -231,24 +234,30 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
+    fn input_handler(key_code: KeyCode, app: &mut App) -> () {
         match key_code {
             KeyCode::Esc => {
                 app.add.add_type = None;
                 app.mode = Mode::Normal;
-                Ok(None)
             }
             KeyCode::Char(c) => {
                 app.add.input.push(c);
                 app.cursor_position.as_mut().unwrap().push_inc(c);
-                Ok(None)
             }
             KeyCode::Backspace => {
                 app.add.input.pop();
                 app.cursor_position.as_mut().unwrap().pop_dec();
-                Ok(None)
             }
-            KeyCode::Enter => match app.add.add_type {
+            _ => (),
+        }
+    }
+
+    fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
+
+        KeyParser::input_handler(key_code, app);
+
+        if key_code == KeyCode::Enter {
+            return match app.add.add_type {
                 Some(AddType::Namespace) => {
                     if app.add.input.is_empty() {
                         return Ok(None);
@@ -278,8 +287,15 @@ impl KeyParser {
                     Ok(None)
                 }
                 _ => Ok(None),
-            },
-            _ => Ok(None),
+            }
         }
+        Ok(None)
+    }
+
+    fn process_add_command(key_code: KeyCode, app: &mut App) -> ParserResult {
+
+        KeyParser::input_handler(key_code, app);
+        Ok(None)
+
     }
 }

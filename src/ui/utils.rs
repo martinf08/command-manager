@@ -50,6 +50,7 @@ pub fn get_highlight_style() -> Style {
 }
 
 pub fn get_popup_layout<B>(
+    title: String,
     f: &mut Frame<B>,
     rect: Rect,
     margin_ratio: Option<u8>,
@@ -59,7 +60,7 @@ where
     B: Backend,
 {
     let block = Block::default()
-        .title("Add entry")
+        .title(title)
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::White));
 

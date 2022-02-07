@@ -49,8 +49,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
-where
-    B: Backend,
+    where
+        B: Backend,
 {
     let sub_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -60,7 +60,7 @@ where
                 Constraint::Percentage(20),
                 Constraint::Percentage(30),
             ]
-            .as_ref(),
+                .as_ref(),
         )
         .split(rect);
 
@@ -72,7 +72,7 @@ where
                 Constraint::Percentage(75),
                 Constraint::Percentage(10),
             ]
-            .as_ref(),
+                .as_ref(),
         )
         .split(sub_chunks[0]);
 
@@ -134,7 +134,7 @@ where
     );
 
     if app.show_command_confirmation {
-        let layout = get_popup_layout(f, chunks[1], Some(3), None);
+        let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
 
         let text = vec![
             Spans::from(Span::styled(
@@ -161,6 +161,27 @@ where
         command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
     }
 
+    if *app.get_mode() == Mode::Add {
+        match &app.add.add_type {
+            Some(t) => match t {
+                AddType::Command => (),
+                AddType::Namespace => match app.add.input_mode {
+                    Some(InputMode::Namespace) => display_add_input_area(app, f, chunks[1]),
+                    Some(InputMode::Command) => {
+                        if app.namespaces.state.selected().is_some() {
+                            display_add_input_area(app, f, chunks[1])
+                        }
+                    }
+                    None => app.add.input_mode = Some(InputMode::Namespace)
+                },
+            },
+            None => {
+                display_add_type_selector(f, chunks[1]);
+                command_text = "Caution: Namespace must be selected before adding a command.".to_string();
+            }
+        }
+    }
+
     let detail_command_paragraph = Paragraph::new(command_text)
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: true })
@@ -173,26 +194,18 @@ where
         );
 
     f.render_widget(detail_command_paragraph, sub_chunks[1]);
-
-    if *app.get_mode() == Mode::Add {
-        match &app.add.add_type {
-            Some(t) => match t {
-                AddType::Command => (),
-                AddType::Namespace => match app.add.input_mode {
-                    Some(InputMode::Namespace) => display_add_namespace_input(app, f, chunks[1]),
-                    Some(InputMode::Command) => (),
-                    None => {
-                        app.add.input_mode = Some(InputMode::Namespace);
-                    }
-                },
-            },
-            None => display_add_type_selector(app, f, chunks[1]),
-        }
-    }
 }
 
-fn display_add_namespace_input(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
-    let rects = get_popup_layout(f, chunk, None, Some((100, 100)));
+fn display_add_input_area(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
+    let title = match &app.add.add_type {
+        Some(t) => match t {
+            AddType::Command => "Command".to_string(),
+            AddType::Namespace => "Namespace".to_string(),
+        },
+        None => "".to_string(),
+    };
+
+    let rects = get_popup_layout(title, f, chunk, None, Some((100, 100)));
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -210,8 +223,8 @@ fn display_add_namespace_input(app: &mut App, f: &mut Frame<impl Backend>, chunk
     f.render_widget(p, chunks[0]);
 }
 
-fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect) {
-    let rects = get_popup_layout(f, rect, Some(3), None);
+fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
+    let rects = get_popup_layout("Element to add".to_string(), f, rect, Some(3), None);
 
     let layout = Layout::default()
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
@@ -220,22 +233,10 @@ fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: R
 
     let command = Button::new("Command")
         .style(Style::default().fg(Color::Red))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Add type")
-                .style(Style::default().fg(Color::Yellow)),
-        )
         .alignment(Alignment::Center);
 
     let namespace = Button::new("Namespace")
         .style(Style::default().fg(Color::White))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Add type")
-                .style(Style::default().fg(Color::Yellow)),
-        )
         .alignment(Alignment::Center);
 
     f.render_widget(command, layout[0]);
@@ -243,8 +244,8 @@ fn display_add_type_selector(app: &mut App, f: &mut Frame<impl Backend>, rect: R
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
-where
-    B: Backend,
+    where
+        B: Backend,
 {
     let bloc = Block::default().title("Inner 2").borders(Borders::ALL);
 
