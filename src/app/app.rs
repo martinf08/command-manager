@@ -152,13 +152,22 @@ impl CursorPosition {
     }
 
     fn dec(&mut self) {
-        if self.input.len() > self.initial_x && self.y >= self.initial_y {
-            self.x = self.x.saturating_sub(1);
-        } else if (self.x <= self.initial_x) && (self.y <= self.initial_y) {
+        if self.input.len() == 0 {
+            self.x = self.initial_x;
             return;
-        } else {
+        }
+
+        if self.input.len() % self.width.saturating_sub(1) != 0 && self.x > self.initial_x {
             self.x = self.x.saturating_sub(1);
-            self.y = self.y.saturating_sub(1);
+        } else {
+            if self.x > self.initial_x {
+                self.x = self.x.saturating_sub(1);
+            } else {
+                if self.y > self.initial_y {
+                    self.y = self.y.saturating_sub(1);
+                    self.x = self.width.saturating_sub(1);
+                }
+            }
         }
     }
 
