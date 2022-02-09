@@ -2,7 +2,7 @@ use crate::app::add::Add;
 use crate::db::{get_commands_and_tags, get_namespaces};
 use tui::widgets::ListState;
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Mode {
     Add,
     Delete,
@@ -190,6 +190,8 @@ pub struct App<'a> {
     pub commands: StatefulList<String>,
     pub show_command_confirmation: bool,
     pub confirmation_popup: PopupContent<'a>,
+    pub show_delete_confirmation: bool,
+    pub delete_confirmation_popup: PopupContent<'a>,
     pub tags: StatefulList<String>,
     pub quit: bool,
     pub add: Add<'a, &'a str>,
@@ -210,7 +212,12 @@ impl<'a> App<'a> {
             commands: StatefulList::with_items(commands),
             show_command_confirmation: false,
             confirmation_popup: PopupContent::new(
-                "Are you sure you want the selected command ? (Esc to cancel)",
+                "Are you sure you want the selected item ? (Esc to cancel)",
+                "Press Enter",
+            ),
+            show_delete_confirmation: false,
+            delete_confirmation_popup: PopupContent::new(
+                "Are you sure you want to delete the selected command ? (Esc to cancel)",
                 "Press Enter",
             ),
             tags: StatefulList::with_items(tags),

@@ -49,8 +49,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
-where
-    B: Backend,
+    where
+        B: Backend,
 {
     let sub_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -60,7 +60,7 @@ where
                 Constraint::Percentage(20),
                 Constraint::Percentage(30),
             ]
-            .as_ref(),
+                .as_ref(),
         )
         .split(rect);
 
@@ -72,7 +72,7 @@ where
                 Constraint::Percentage(75),
                 Constraint::Percentage(10),
             ]
-            .as_ref(),
+                .as_ref(),
         )
         .split(sub_chunks[0]);
 
@@ -161,8 +161,8 @@ where
         command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
     }
 
-    if *app.get_mode() == Mode::Add {
-        match &app.add.add_type {
+    match *app.get_mode() {
+        Mode::Add => match &app.add.add_type {
             Some(t) => match t {
                 AddType::Command => match app.add.input_mode {
                     Some(InputMode::Command) | Some(InputMode::Tag) => {
@@ -188,8 +188,37 @@ where
                 command_text =
                     "Caution: Namespace must be selected before adding a command.".to_string();
             }
+        },
+        Mode::Delete => {
+            if app.show_delete_confirmation
+                && (app.commands.state.selected().is_some()
+                || app.namespaces.state.selected().is_some())
+            {
+                let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
+
+                let text = vec![
+                    Spans::from(Span::styled(
+                        app.confirmation_popup.message,
+                        Style::default().fg(Color::White),
+                    )),
+                    Spans::from(Span::raw("")),
+                    Spans::from(Span::styled(
+                        app.confirmation_popup.confirm,
+                        Style::default()
+                            .add_modifier(Modifier::BOLD)
+                            .fg(Color::Red)
+                            .bg(Color::Gray),
+                    )),
+                ];
+
+                let p = Paragraph::new(text).alignment(Alignment::Center);
+
+                f.render_widget(p, layout[0]);
+            }
         }
+        _ => {}
     }
+
 
     let detail_command_paragraph = Paragraph::new(command_text)
         .alignment(Alignment::Left)
@@ -253,8 +282,8 @@ fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
-where
-    B: Backend,
+    where
+        B: Backend,
 {
     let bloc = Block::default().title("Inner 2").borders(Borders::ALL);
 

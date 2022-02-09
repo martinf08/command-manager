@@ -1,4 +1,5 @@
 #![allow(unused)]
+
 use crate::fixtures;
 use rusqlite::Connection;
 use std::error::Error;
@@ -53,12 +54,14 @@ fn create_db_structure(db: &str) -> Result<(), Box<dyn Error>> {
         value TEXT NOT NULL,
         namespace_id INTEGER NOT NULL,
         FOREIGN KEY (namespace_id) REFERENCES namespaces(id)
+        ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS tags (
         id INTEGER PRIMARY KEY,
         name VARCHAR(255) UNIQUE NOT NULL,
         command_id INTEGER NOT NULL,
         FOREIGN KEY (command_id) REFERENCES commands(id)
+        ON DELETE CASCADE
     );
     ",
     )?;
@@ -136,11 +139,11 @@ pub fn get_commands_and_tags(
             let tag = row.get(1)?;
             Ok((command, tag))
         })?
-        .for_each(|row| {
-            let (command, tag) = row.expect("Unable to get row");
-            commands.push(command);
-            tags.push(tag);
-        });
+            .for_each(|row| {
+                let (command, tag) = row.expect("Unable to get row");
+                commands.push(command);
+                tags.push(tag);
+            });
     } else {
         let mut stmt = conn.prepare(
             r"
@@ -153,11 +156,11 @@ pub fn get_commands_and_tags(
             let tag = row.get(1)?;
             Ok((command, tag))
         })?
-        .for_each(|row| {
-            let (command, tag) = row.expect("Unable to get row");
-            commands.push(command);
-            tags.push(tag);
-        });
+            .for_each(|row| {
+                let (command, tag) = row.expect("Unable to get row");
+                commands.push(command);
+                tags.push(tag);
+            });
     };
 
     if commands.len() != tags.len() {
@@ -190,5 +193,62 @@ pub fn add_command_and_tag(
     )?;
 
     stmt.execute([tag, command.unwrap()])?;
+    Ok(())
+}
+
+pub fn delete_command(command: &String, namespace: &String) -> Result<(), Box<dyn Error>> {
+    let db = get_db()?;
+    let conn = Connection::open(db)?;
+
+    conn.execute(r"SET FOREIGN_KEY_CHECKS=0", []);
+
+    let mut stmt = conn.prepare(
+        r"
+        DELETE FROM commands
+        WHERE value = :command AND namespace_id = (SELECT id FROM namespaces WHERE name = :namespace);",
+    )?;
+
+    stmt.execute([command, namespace])?;
+
+    let mut stmt = conn.prepare(
+        r"
+        DELETE FROM tags
+        WHERE command_id = (SELECT id FROM commands WHERE value = :command);",
+    )?;
+
+    stmt.execute([command])?;
+
+    conn.execute(r"SET FOREIGN_KEY_CHECKS=1", []);
+
+    Ok(())
+}
+
+pub fn delete_namespace(namespace: &String) -> Result<(), Box<dyn Error>> {
+    let db = get_db()?;
+    let conn = Connection::open(db)?;
+
+    let mut stmt = conn.prepare(
+        r"
+        DELETE FROM commands
+        WHERE namespace_id = (SELECT id FROM namespaces WHERE name = :namespace);",
+    )?;
+
+    stmt.execute([namespace])?;
+
+    let mut stmt = conn.prepare(
+        r"
+        DELETE FROM tags
+        WHERE command_id IN (SELECT id FROM commands WHERE namespace_id = (SELECT id FROM namespaces WHERE name = :namespace));",
+    )?;
+
+    stmt.execute([namespace])?;
+
+    let mut stmt = conn.prepare(
+        r"
+        DELETE FROM namespaces
+        WHERE name = :namespace;",
+    )?;
+
+    stmt.execute([namespace])?;
     Ok(())
 }

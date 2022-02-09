@@ -1,8 +1,6 @@
 use crate::app::add::{AddType, InputMode};
 use crate::app::app::{App, Mode, State, StatefulList};
-use crate::db::{
-    add_command_and_tag, add_namespace, get_commands_and_tags, get_namespace, get_namespaces,
-};
+use crate::db::{add_command_and_tag, add_namespace, delete_command, delete_namespace, get_commands_and_tags, get_namespace, get_namespaces};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 
@@ -79,10 +77,8 @@ impl KeyParser {
             KeyCode::Up => KeyParser::move_up(app),
             KeyCode::Enter => KeyParser::enter(app),
             KeyCode::Esc => KeyParser::esc(app),
-            KeyCode::Char('a') => {
-                app.change_mode(Mode::Add);
-                Ok(None)
-            }
+            KeyCode::Char('a') => KeyParser::change_to_add_mode(app),
+            KeyCode::Char('d') => KeyParser::change_to_delete_mode(app),
             _ => Ok(None),
         }
     }
@@ -123,8 +119,48 @@ impl KeyParser {
         }
     }
 
-    fn process_delete_mode(_key_code: KeyCode, _app: &mut App) -> ParserResult {
-        unimplemented!()
+    fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        if app.show_delete_confirmation {
+            match key_code {
+                KeyCode::Enter => {
+                    if app.commands.current_selected {
+                        delete_command(app.commands.current_item(), app.namespaces.current_item())?;
+
+                        let (commands, tags) =
+                            get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
+
+                        app.commands = StatefulList::with_items(commands);
+                        app.tags = StatefulList::with_items(tags);
+                    } else if app.namespaces.current_selected {
+                        delete_namespace(app.namespaces.current_item())?;
+
+                        let namespaces = get_namespaces().expect("Failed to get namespaces");
+                        app.namespaces = StatefulList::with_items(namespaces);
+
+                        let (commands, tags) =
+                            get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
+                        app.commands = StatefulList::with_items(commands);
+                        app.tags = StatefulList::with_items(tags);
+                    } else {
+                        return Ok(None);
+                    }
+
+                    app.show_delete_confirmation = false;
+                    app.change_mode(Mode::Normal);
+
+                    return Ok(None);
+                },
+                KeyCode::Esc => {
+                    app.show_delete_confirmation = false;
+                    app.change_mode(Mode::Normal);
+
+                    return Ok(None);
+                }
+                _ => {}
+            }
+        }
+
+        Ok(None)
     }
 
     fn move_right(app: &mut App) -> ParserResult {
@@ -158,6 +194,10 @@ impl KeyParser {
     }
 
     fn move_down(app: &mut App) -> ParserResult {
+        if app.namespaces.items.is_empty() {
+            return Ok(None);
+        }
+
         match app.commands.state.selected() {
             Some(_) => {
                 if !app.commands.items.is_empty() {
@@ -224,6 +264,7 @@ impl KeyParser {
     }
 
     fn esc(app: &mut App) -> ParserResult {
+        app.change_mode(Mode::Normal);
         match app.show_command_confirmation {
             true => {
                 app.set_current_selected_commands_tags(true);
@@ -239,11 +280,25 @@ impl KeyParser {
         Ok(None)
     }
 
+    fn change_to_add_mode(app: &mut App) -> ParserResult {
+        app.change_mode(Mode::Add);
+        Ok(None)
+    }
+
+    fn change_to_delete_mode(app: &mut App) -> ParserResult {
+        if app.commands.current_selected || app.namespaces.current_selected {
+            app.change_mode(Mode::Delete);
+            app.show_delete_confirmation = true;
+        }
+
+        Ok(None)
+    }
+
     fn input_handler(key_code: KeyCode, app: &mut App) -> () {
         match key_code {
             KeyCode::Esc => {
                 app.add.add_type = None;
-                app.mode = Mode::Normal;
+                app.change_mode(Mode::Normal);
             }
             KeyCode::Char(c) => {
                 app.add.input.push(c);
@@ -261,7 +316,7 @@ impl KeyParser {
         app.add.input.clear();
         app.add.input_command = None;
         app.add.add_type = None;
-        app.mode = Mode::Normal;
+        app.change_mode(Mode::Normal);
     }
 
     fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
@@ -321,7 +376,7 @@ impl KeyParser {
                         &app.add.input,
                         &app.namespaces.current_item(),
                     )
-                    .expect("Failed to add command and tag");
+                        .expect("Failed to add command and tag");
 
                     KeyParser::clear_mode(app);
                 }
