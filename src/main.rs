@@ -1,8 +1,16 @@
+mod app;
 mod cmd;
+mod core;
+mod db;
+mod fixtures;
+mod ui;
+mod widget;
 
+use crate::app::app::App;
 use crate::cmd::Cmd;
-use cm::{app::App, run_app};
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crate::core::run;
+
+use crossterm::event::DisableMouseCapture;
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
@@ -13,18 +21,19 @@ use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    db::init_db(true)?;
+
     // setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(stdout, EnterAlternateScreen /*, EnableMouseCapture*/)?;
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    // let _history_file = std::env::var("HISTORY_FILE").expect("HISTORY_FILE env not set, provide a path to a history file. ex : HISTORY_FILE=/home/user/.history");
     let app = App::new("Command Manager");
-    let result = run_app(&mut terminal, app);
+    let result = run(&mut terminal, app);
 
     // restore terminal
     disable_raw_mode()?;
