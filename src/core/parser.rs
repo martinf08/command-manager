@@ -1,6 +1,9 @@
 use crate::app::add::{AddType, InputMode};
 use crate::app::app::{App, Mode, State, StatefulList};
-use crate::db::{add_command_and_tag, add_namespace, delete_command, delete_namespace, get_commands_and_tags, get_namespace, get_namespaces};
+use crate::db::{
+    add_command_and_tag, add_namespace, delete_command, delete_namespace, get_commands_and_tags,
+    get_namespace, get_namespaces,
+};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 
@@ -149,7 +152,7 @@ impl KeyParser {
                     app.change_mode(Mode::Normal);
 
                     return Ok(None);
-                },
+                }
                 KeyCode::Esc => {
                     app.show_delete_confirmation = false;
                     app.change_mode(Mode::Normal);
@@ -376,7 +379,7 @@ impl KeyParser {
                         &app.add.input,
                         &app.namespaces.current_item(),
                     )
-                        .expect("Failed to add command and tag");
+                    .expect("Failed to add command and tag");
 
                     KeyParser::clear_mode(app);
                 }

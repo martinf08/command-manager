@@ -139,11 +139,11 @@ pub fn get_commands_and_tags(
             let tag = row.get(1)?;
             Ok((command, tag))
         })?
-            .for_each(|row| {
-                let (command, tag) = row.expect("Unable to get row");
-                commands.push(command);
-                tags.push(tag);
-            });
+        .for_each(|row| {
+            let (command, tag) = row.expect("Unable to get row");
+            commands.push(command);
+            tags.push(tag);
+        });
     } else {
         let mut stmt = conn.prepare(
             r"
@@ -156,11 +156,11 @@ pub fn get_commands_and_tags(
             let tag = row.get(1)?;
             Ok((command, tag))
         })?
-            .for_each(|row| {
-                let (command, tag) = row.expect("Unable to get row");
-                commands.push(command);
-                tags.push(tag);
-            });
+        .for_each(|row| {
+            let (command, tag) = row.expect("Unable to get row");
+            commands.push(command);
+            tags.push(tag);
+        });
     };
 
     if commands.len() != tags.len() {

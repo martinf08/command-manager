@@ -49,8 +49,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
-    where
-        B: Backend,
+where
+    B: Backend,
 {
     let sub_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -60,7 +60,7 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
                 Constraint::Percentage(20),
                 Constraint::Percentage(30),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(rect);
 
@@ -72,7 +72,7 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
                 Constraint::Percentage(75),
                 Constraint::Percentage(10),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(sub_chunks[0]);
 
@@ -192,7 +192,7 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
         Mode::Delete => {
             if app.show_delete_confirmation
                 && (app.commands.state.selected().is_some()
-                || app.namespaces.state.selected().is_some())
+                    || app.namespaces.state.selected().is_some())
             {
                 let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
 
@@ -218,7 +218,6 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
         }
         _ => {}
     }
-
 
     let detail_command_paragraph = Paragraph::new(command_text)
         .alignment(Alignment::Left)
@@ -282,8 +281,8 @@ fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
-    where
-        B: Backend,
+where
+    B: Backend,
 {
     let bloc = Block::default().title("Inner 2").borders(Borders::ALL);
 
