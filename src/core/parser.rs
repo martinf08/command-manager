@@ -46,11 +46,11 @@ impl KeyParser {
 
     fn process_tab_1(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Right => {
+            KeyCode::Right | KeyCode::Char('l') => {
                 app.tabs.next();
                 Ok(None)
             }
-            KeyCode::Left => {
+            KeyCode::Left | KeyCode::Char('h') => {
                 app.tabs.previous();
                 Ok(None)
             }
@@ -60,11 +60,11 @@ impl KeyParser {
 
     fn process_tab_2(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Right => {
+            KeyCode::Right | KeyCode::Char('l') => {
                 app.tabs.next();
                 Ok(None)
             }
-            KeyCode::Left => {
+            KeyCode::Left | KeyCode::Char('h') => {
                 app.tabs.previous();
                 Ok(None)
             }
@@ -74,10 +74,10 @@ impl KeyParser {
 
     fn process_normal_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Right => KeyParser::move_right(app),
-            KeyCode::Left => KeyParser::move_left(app),
-            KeyCode::Down => KeyParser::move_down(app),
-            KeyCode::Up => KeyParser::move_up(app),
+            KeyCode::Right | KeyCode::Char('l') => KeyParser::move_right(app),
+            KeyCode::Left | KeyCode::Char('h') => KeyParser::move_left(app),
+            KeyCode::Down | KeyCode::Char('j') => KeyParser::move_down(app),
+            KeyCode::Up | KeyCode::Char('k') => KeyParser::move_up(app),
             KeyCode::Enter => KeyParser::enter(app),
             KeyCode::Esc => KeyParser::esc(app),
             KeyCode::Char('a') => KeyParser::change_to_add_mode(app),
@@ -103,7 +103,7 @@ impl KeyParser {
                 },
                 None => match key_code {
                     KeyCode::Char('c') => {
-                        if app.namespaces.current_selected {
+                        if app.namespaces.current_selected || app.commands.current_selected {
                             app.add.add_type = Some(AddType::Command);
                             app.add.input_mode = Some(InputMode::Command);
                         }
