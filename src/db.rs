@@ -5,46 +5,53 @@ use rusqlite::Connection;
 use std::error::Error;
 use std::path::Path;
 
-pub fn init_db(init_fixtures: bool) -> Result<(), Box<dyn Error>> {
-    let db = get_db()?;
-    create_db_structure(&db)?;
-    if init_fixtures {
-        fixtures::db_fixtures(&db)?;
+pub struct Db {
+    conn: Connection,
+}
+
+impl Db {
+    pub fn new() -> Result<Db, Box<dyn Error>> {
+        let path = Db::get_db_path()?;
+        let conn = Connection::open(path)?;
+
+        Ok(Db { conn })
     }
 
-    Ok(())
-}
+    pub fn get_db_path() -> Result<String, Box<dyn Error>> {
+        let db_file = std::env::var("CM_DB");
 
-pub fn get_db() -> Result<String, Box<dyn Error>> {
-    let db_file = std::env::var("CM_DB");
-
-    let db_file = match db_file {
-        Ok(f) => {
-            let db_path = Path::new(&f);
-            if !db_path.is_file() {
-                panic!("CM_DB env is not a file");
+        let db_file = match db_file {
+            Ok(f) => {
+                let db_path = Path::new(&f);
+                if !db_path.is_file() {
+                    panic!("CM_DB env is not a file");
+                }
+                f
             }
-            f
-        }
-        Err(_) => {
-            let home = dirs::home_dir().expect("Could not find home directory");
-            let db_namespace = home.join(".cm");
-            std::fs::create_dir_all(&db_namespace)?;
-            let db_path = db_namespace.join("command_manager.db");
-            let db = db_path.to_str().expect("Unable to get db path");
+            Err(_) => {
+                let home = dirs::home_dir().expect("Could not find home directory");
+                let db_namespace = home.join(".cm");
+                std::fs::create_dir_all(&db_namespace)?;
+                let db_path = db_namespace.join("command_manager.db");
+                let db = db_path.to_str().expect("Unable to get db path");
 
-            db.to_string()
-        }
-    };
+                db.to_string()
+            }
+        };
 
-    Ok(db_file)
-}
+        Ok(db_file)
+    }
 
-fn create_db_structure(db: &str) -> Result<(), Box<dyn Error>> {
-    let conn = Connection::open(db)?;
+    pub fn init_db(&self) -> Result<(), Box<dyn Error>> {
+        self.create_db_structure()?;
+        fixtures::db_fixtures(&self.conn)?;
 
-    conn.execute_batch(
-        r"
+        Ok(())
+    }
+
+    pub fn create_db_structure(&self) -> Result<(), Box<dyn Error>> {
+        self.conn.execute_batch(
+            r"
     CREATE TABLE IF NOT EXISTS namespaces (
         id INTEGER PRIMARY KEY,
         name VARCHAR(255) UNIQUE NOT NULL
@@ -64,191 +71,181 @@ fn create_db_structure(db: &str) -> Result<(), Box<dyn Error>> {
         ON DELETE CASCADE
     );
     ",
-    )?;
+        )?;
 
-    Ok(())
-}
-
-pub fn add_namespace(s: &String) -> Result<(), Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
-
-    let mut stmt = conn.prepare("INSERT INTO namespaces (name) VALUES (?)")?;
-    stmt.execute([s]);
-
-    Ok(())
-}
-
-pub fn get_namespaces() -> Result<Vec<String>, Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
-
-    let mut namespaces: Vec<String> = Vec::new();
-
-    let mut stmt = conn.prepare("SELECT name FROM namespaces")?;
-    for row in stmt.query_map([], |row| row.get(0))? {
-        let namespace = row?;
-        namespaces.push(namespace);
+        Ok(())
     }
 
-    Ok(namespaces)
-}
+    pub fn add_namespace(&self, s: &String) -> Result<(), Box<dyn Error>> {
+        let mut stmt = self
+            .conn
+            .prepare("INSERT INTO namespaces (name) VALUES (?)")?;
+        stmt.execute([s]);
 
-pub fn get_namespace(s: &String) -> Result<Option<String>, Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
-
-    let mut stmt = conn.prepare("SELECT name FROM namespaces WHERE name = ?")?;
-    let mut rows = stmt.query([s])?;
-
-    let mut namespace = None;
-    if let Ok(row) = rows.next() {
-        namespace = if row.is_none() {
-            None
-        } else {
-            Some(row.ok_or("Unable to get row")?.get(0)?)
-        };
+        Ok(())
     }
 
-    if namespace.is_none() {
-        return Ok(None);
+    pub fn get_namespaces(&self) -> Result<Vec<String>, Box<dyn Error>> {
+        let mut namespaces: Vec<String> = Vec::new();
+
+        let mut stmt = self.conn.prepare("SELECT name FROM namespaces")?;
+        for row in stmt.query_map([], |row| row.get(0))? {
+            let namespace = row?;
+            namespaces.push(namespace);
+        }
+
+        Ok(namespaces)
     }
 
-    Ok(namespace)
-}
+    pub fn get_namespace(&self, s: &String) -> Result<Option<String>, Box<dyn Error>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT name FROM namespaces WHERE name = ?")?;
+        let mut rows = stmt.query([s])?;
 
-pub fn get_commands_and_tags(
-    namespace: Option<String>,
-) -> Result<(Vec<String>, Vec<String>), Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
+        let mut namespace = None;
+        if let Ok(row) = rows.next() {
+            namespace = if row.is_none() {
+                None
+            } else {
+                Some(row.ok_or("Unable to get row")?.get(0)?)
+            };
+        }
 
-    let mut commands: Vec<String> = Vec::new();
-    let mut tags: Vec<String> = Vec::new();
+        if namespace.is_none() {
+            return Ok(None);
+        }
 
-    if namespace.is_some() {
-        let mut stmt = conn.prepare(
-            r"
+        Ok(namespace)
+    }
+
+    pub fn get_commands_and_tags(
+        &self,
+        namespace: Option<String>,
+    ) -> Result<(Vec<String>, Vec<String>), Box<dyn Error>> {
+        let mut commands: Vec<String> = Vec::new();
+        let mut tags: Vec<String> = Vec::new();
+
+        if namespace.is_some() {
+            let mut stmt = self.conn.prepare(
+                r"
             SELECT commands.value, tags.name FROM commands
             JOIN tags ON tags.command_id = commands.id
             WHERE namespace_id = (SELECT id FROM namespaces WHERE name = :namespace);",
-        )?;
+            )?;
 
-        stmt.query_map([namespace.unwrap()], |row| {
-            let command = row.get(0)?;
-            let tag = row.get(1)?;
-            Ok((command, tag))
-        })?
-        .for_each(|row| {
-            let (command, tag) = row.expect("Unable to get row");
-            commands.push(command);
-            tags.push(tag);
-        });
-    } else {
-        let mut stmt = conn.prepare(
-            r"
+            stmt.query_map([namespace.unwrap()], |row| {
+                let command = row.get(0)?;
+                let tag = row.get(1)?;
+                Ok((command, tag))
+            })?
+            .for_each(|row| {
+                let (command, tag) = row.expect("Unable to get row");
+                commands.push(command);
+                tags.push(tag);
+            });
+        } else {
+            let mut stmt = self.conn.prepare(
+                r"
             SELECT commands.value, tags.name FROM commands
             JOIN tags ON tags.command_id = commands.id
             WHERE namespace_id = (SELECT id FROM namespaces LIMIT 1);",
-        )?;
-        stmt.query_map([], |row| {
-            let command = row.get(0)?;
-            let tag = row.get(1)?;
-            Ok((command, tag))
-        })?
-        .for_each(|row| {
-            let (command, tag) = row.expect("Unable to get row");
-            commands.push(command);
-            tags.push(tag);
-        });
-    };
+            )?;
+            stmt.query_map([], |row| {
+                let command = row.get(0)?;
+                let tag = row.get(1)?;
+                Ok((command, tag))
+            })?
+            .for_each(|row| {
+                let (command, tag) = row.expect("Unable to get row");
+                commands.push(command);
+                tags.push(tag);
+            });
+        };
 
-    if commands.len() != tags.len() {
-        panic!("Commands and tags are not the same length");
+        if commands.len() != tags.len() {
+            panic!("Commands and tags are not the same length");
+        }
+
+        Ok((commands, tags))
     }
 
-    Ok((commands, tags))
-}
-
-pub fn add_command_and_tag(
-    command: Option<&String>,
-    tag: &String,
-    namespace: &String,
-) -> Result<(), Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
-
-    let mut stmt = conn.prepare(
-        r"
+    pub fn add_command_and_tag(
+        &self,
+        command: Option<&String>,
+        tag: &String,
+        namespace: &String,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut stmt = self.conn.prepare(
+            r"
         INSERT INTO commands (value, namespace_id)
         VALUES (:command, (SELECT id FROM namespaces WHERE name = :namespace));",
-    )?;
+        )?;
 
-    stmt.execute([command, Some(namespace)])?;
+        stmt.execute([command, Some(namespace)])?;
 
-    let mut stmt = conn.prepare(
-        r"
+        let mut stmt = self.conn.prepare(
+            r"
         INSERT INTO tags (name, command_id)
         VALUES (:tag, (SELECT id FROM commands WHERE value = :command));",
-    )?;
+        )?;
 
-    stmt.execute([tag, command.unwrap()])?;
-    Ok(())
-}
+        stmt.execute([tag, command.unwrap()])?;
+        Ok(())
+    }
 
-pub fn delete_command(command: &String, namespace: &String) -> Result<(), Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
+    pub fn delete_command(
+        &self,
+        command: &String,
+        namespace: &String,
+    ) -> Result<(), Box<dyn Error>> {
+        self.conn.execute(r"SET FOREIGN_KEY_CHECKS=0", []);
 
-    conn.execute(r"SET FOREIGN_KEY_CHECKS=0", []);
-
-    let mut stmt = conn.prepare(
-        r"
+        let mut stmt = self.conn.prepare(
+            r"
         DELETE FROM commands
         WHERE value = :command AND namespace_id = (SELECT id FROM namespaces WHERE name = :namespace);",
-    )?;
+        )?;
 
-    stmt.execute([command, namespace])?;
+        stmt.execute([command, namespace])?;
 
-    let mut stmt = conn.prepare(
-        r"
+        let mut stmt = self.conn.prepare(
+            r"
         DELETE FROM tags
         WHERE command_id = (SELECT id FROM commands WHERE value = :command);",
-    )?;
+        )?;
 
-    stmt.execute([command])?;
+        stmt.execute([command])?;
 
-    conn.execute(r"SET FOREIGN_KEY_CHECKS=1", []);
+        self.conn.execute(r"SET FOREIGN_KEY_CHECKS=1", []);
 
-    Ok(())
-}
+        Ok(())
+    }
 
-pub fn delete_namespace(namespace: &String) -> Result<(), Box<dyn Error>> {
-    let db = get_db()?;
-    let conn = Connection::open(db)?;
-
-    let mut stmt = conn.prepare(
-        r"
+    pub fn delete_namespace(&self, namespace: &String) -> Result<(), Box<dyn Error>> {
+        let mut stmt = self.conn.prepare(
+            r"
         DELETE FROM commands
         WHERE namespace_id = (SELECT id FROM namespaces WHERE name = :namespace);",
-    )?;
+        )?;
 
-    stmt.execute([namespace])?;
+        stmt.execute([namespace])?;
 
-    let mut stmt = conn.prepare(
-        r"
+        let mut stmt = self.conn.prepare(
+            r"
         DELETE FROM tags
         WHERE command_id IN (SELECT id FROM commands WHERE namespace_id = (SELECT id FROM namespaces WHERE name = :namespace));",
-    )?;
+        )?;
 
-    stmt.execute([namespace])?;
+        stmt.execute([namespace])?;
 
-    let mut stmt = conn.prepare(
-        r"
+        let mut stmt = self.conn.prepare(
+            r"
         DELETE FROM namespaces
         WHERE name = :namespace;",
-    )?;
+        )?;
 
-    stmt.execute([namespace])?;
-    Ok(())
+        stmt.execute([namespace])?;
+        Ok(())
+    }
 }

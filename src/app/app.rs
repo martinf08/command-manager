@@ -1,5 +1,5 @@
 use crate::app::add::Add;
-use crate::db::{get_commands_and_tags, get_namespaces};
+use crate::Db;
 use tui::widgets::ListState;
 
 #[derive(Debug, PartialEq)]
@@ -183,6 +183,7 @@ impl CursorPosition {
 }
 
 pub struct App<'a> {
+    pub db: Db,
     pub mode: Mode,
     pub title: &'a str,
     pub tabs: TabsState<'a>,
@@ -200,11 +201,15 @@ pub struct App<'a> {
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str) -> Self {
-        let namespaces = get_namespaces().expect("Failed to get namespaces");
-        let (commands, tags) =
-            get_commands_and_tags(None).expect("Failed to get commands and tags");
+        let db = Db::new().expect("Failed to open database");
+
+        let namespaces = db.get_namespaces().expect("Failed to get namespaces");
+        let (commands, tags) = db
+            .get_commands_and_tags(None)
+            .expect("Failed to get commands and tags");
 
         App {
+            db,
             mode: Mode::Normal,
             title,
             tabs: TabsState::new(vec!["Tab0", "Tab1", "Tab2"]),
@@ -229,8 +234,10 @@ impl<'a> App<'a> {
 
     pub fn set_commands_tags_from_position(&mut self, index: usize) {
         let namespace = self.namespaces.items[index].clone();
-        let (commands, tags) =
-            get_commands_and_tags(Some(namespace)).expect("Failed to get commands and tags");
+        let (commands, tags) = self
+            .db
+            .get_commands_and_tags(Some(namespace))
+            .expect("Failed to get commands and tags");
         self.commands = StatefulList::with_items(commands);
         self.tags = StatefulList::with_items(tags);
     }

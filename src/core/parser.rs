@@ -1,9 +1,5 @@
 use crate::app::add::{AddType, InputMode};
 use crate::app::app::{App, Mode, State, StatefulList};
-use crate::db::{
-    add_command_and_tag, add_namespace, delete_command, delete_namespace, get_commands_and_tags,
-    get_namespace, get_namespaces,
-};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 
@@ -127,21 +123,26 @@ impl KeyParser {
             match key_code {
                 KeyCode::Enter => {
                     if app.commands.current_selected {
-                        delete_command(app.commands.current_item(), app.namespaces.current_item())?;
+                        app.db.delete_command(
+                            app.commands.current_item(),
+                            app.namespaces.current_item(),
+                        )?;
 
-                        let (commands, tags) =
-                            get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
+                        let (commands, tags) = app
+                            .db
+                            .get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
 
                         app.commands = StatefulList::with_items(commands);
                         app.tags = StatefulList::with_items(tags);
                     } else if app.namespaces.current_selected {
-                        delete_namespace(app.namespaces.current_item())?;
+                        app.db.delete_namespace(app.namespaces.current_item())?;
 
-                        let namespaces = get_namespaces().expect("Failed to get namespaces");
+                        let namespaces = app.db.get_namespaces().expect("Failed to get namespaces");
                         app.namespaces = StatefulList::with_items(namespaces);
 
-                        let (commands, tags) =
-                            get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
+                        let (commands, tags) = app
+                            .db
+                            .get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
                         app.commands = StatefulList::with_items(commands);
                         app.tags = StatefulList::with_items(tags);
                     } else {
@@ -332,7 +333,7 @@ impl KeyParser {
                         return Ok(None);
                     }
 
-                    let existing_namespace = get_namespace(&app.add.input);
+                    let existing_namespace = app.db.get_namespace(&app.add.input);
 
                     if let Ok(option) = existing_namespace {
                         if let Some(s) = option {
@@ -343,10 +344,12 @@ impl KeyParser {
                         }
                     }
 
-                    add_namespace(&app.add.input).expect("Failed to add namespace");
+                    app.db
+                        .add_namespace(&app.add.input)
+                        .expect("Failed to add namespace");
                     KeyParser::clear_mode(app);
 
-                    let namespaces = get_namespaces().expect("Failed to get namespaces");
+                    let namespaces = app.db.get_namespaces().expect("Failed to get namespaces");
                     app.namespaces = StatefulList::with_items(namespaces);
                     app.cursor_position = None;
 
@@ -374,21 +377,23 @@ impl KeyParser {
                 }
                 Some(InputMode::Tag) => {
                     app.add.input_mode = None;
-                    add_command_and_tag(
-                        app.add.input_command.as_ref(),
-                        &app.add.input,
-                        &app.namespaces.current_item(),
-                    )
-                    .expect("Failed to add command and tag");
+                    app.db
+                        .add_command_and_tag(
+                            app.add.input_command.as_ref(),
+                            &app.add.input,
+                            &app.namespaces.current_item(),
+                        )
+                        .expect("Failed to add command and tag");
 
                     KeyParser::clear_mode(app);
                 }
                 _ => (),
             }
 
-            let (commands, tags) =
-                get_commands_and_tags(Some(app.namespaces.current_item().clone()))
-                    .expect("Failed to get commands and tags");
+            let (commands, tags) = app
+                .db
+                .get_commands_and_tags(Some(app.namespaces.current_item().clone()))
+                .expect("Failed to get commands and tags");
 
             app.commands = StatefulList::with_items(commands);
             app.tags = StatefulList::with_items(tags);
