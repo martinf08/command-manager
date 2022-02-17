@@ -1,8 +1,7 @@
 use rusqlite::{params, Connection};
 use std::error::Error;
 
-pub fn db_fixtures(db: &str) -> Result<(), Box<dyn Error>> {
-    let conn = Connection::open(db)?;
+pub fn db_fixtures(conn: &Connection) -> Result<(), Box<dyn Error>> {
     let result: u32 = conn.query_row("SELECT count(*) FROM commands", [], |row| row.get(0))?;
 
     if result > 0 {

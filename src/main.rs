@@ -10,6 +10,7 @@ use crate::app::app::App;
 use crate::cmd::Cmd;
 use crate::core::run;
 
+use crate::db::Db;
 use crossterm::event::DisableMouseCapture;
 use crossterm::execute;
 use crossterm::terminal::{
@@ -21,7 +22,8 @@ use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    db::init_db(true)?;
+    let db = Db::new()?;
+    db.init_db()?;
 
     // setup terminal
     enable_raw_mode()?;
