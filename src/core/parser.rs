@@ -1,7 +1,8 @@
 use crate::app::add::{AddType, InputMode};
-use crate::app::app::{App, Mode, State, StatefulList};
+use crate::app::app::{App, State, StatefulList};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
+use crate::app::event_state::Mode;
 
 pub struct KeyParser;
 
@@ -19,7 +20,7 @@ impl KeyParser {
             return Ok(None);
         }
 
-        match app.tabs.index {
+        match app.event_state.tab {
             0 => KeyParser::process_tab_0(key_code, app),
             1 => KeyParser::process_tab_1(key_code, app),
             2 => KeyParser::process_tab_2(key_code, app),

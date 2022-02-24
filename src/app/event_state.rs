@@ -32,11 +32,11 @@ pub enum Tab {
 }
 
 pub struct EventState {
-    pub confirm: Confirm,
-    pub event_type: EventType,
-    pub mode: Mode,
-    pub sub_mode: SubMode,
-    pub tab: Tab,
+     confirm: Confirm,
+     event_type: EventType,
+     mode: Mode,
+     sub_mode: SubMode,
+     tab: Tab,
 }
 
 impl EventState {
@@ -48,5 +48,45 @@ impl EventState {
             sub_mode: SubMode::None,
             tab: Tab::Tab1,
         }
+    }
+
+    pub fn get_mode(&self) -> &Mode {
+        &self.mode
+    }
+
+    pub fn get_sub_mode(&self) -> &SubMode {
+        &self.sub_mode
+    }
+
+   pub fn get_event_type(&self) -> &EventType {
+       &self.event_type
+   }
+
+    pub fn get_confirm(&self) -> &Confirm {
+        &self.confirm
+    }
+
+    pub fn get_tab(&self) -> &Tab {
+        &self.tab
+    }
+
+    pub fn set_mode(&mut self, mode: Mode) {
+        self.mode = mode;
+    }
+
+    pub fn set_sub_mode(&mut self, sub_mode: SubMode) {
+        self.sub_mode = sub_mode;
+    }
+
+    pub fn set_event_type(&mut self, event_type: EventType) {
+        self.event_type = event_type;
+    }
+
+    pub fn set_confirm(&mut self, confirm: Confirm) {
+        self.confirm = confirm;
+    }
+
+    pub fn set_tab(&mut self, tab: Tab) {
+        self.tab = tab;
     }
 }
