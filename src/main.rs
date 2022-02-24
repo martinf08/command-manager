@@ -1,8 +1,6 @@
 mod app;
-mod cmd;
 mod core;
 mod db;
-mod fixtures;
 mod ui;
 mod widget;
 

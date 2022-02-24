@@ -1,16 +1,17 @@
-use crate::cmd::Cmd;
 use crate::core::parser::ParserResult;
+use crate::core::cmd::Cmd;
 use crate::{App, Cmd};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::error::Error;
 use std::io;
-use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
+use tui::backend::{Backend, CrosstermBackend};
 
 pub mod config;
-pub mod engine;
+mod engine;
 mod parser;
+mod cmd;
 
 pub struct Engine;
 
