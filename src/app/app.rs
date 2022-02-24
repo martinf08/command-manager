@@ -1,15 +1,13 @@
-use std::error::Error;
-use crate::app::add::Add;
+use crate::app::event_state::EventState;
 use crate::app::input::CursorPosition;
 use crate::app::state::{StatefulList, TabsState};
-use crate::Db;
-use crossterm::event::Event;
-use tui::widgets::ListState;
-use crate::app::event_state::EventState;
 use crate::core::config::Config;
+use crate::Db;
 
+use std::error::Error;
+use crate::db::Db;
 
-pub struct App<'a> {
+pub struct App {
     pub commands: StatefulList<String>,
     pub cursor_position: Option<CursorPosition>,
     pub db: Db,
@@ -19,11 +17,12 @@ pub struct App<'a> {
     pub tags: StatefulList<String>,
 }
 
-impl<'a> App<'a> {
+impl App {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let config = Config::new();
 
         let db = Db::new()?;
+        db.init_db()?;
 
         let namespaces = db.get_namespaces()?;
         let (commands, tags) = db.get_commands_and_tags(None)?;

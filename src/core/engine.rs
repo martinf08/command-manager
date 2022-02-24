@@ -1,14 +1,18 @@
 use crate::core::parser::{KeyParser, ParserResult};
 use crate::ui::ui;
 use crate::App;
+use std::io::Stdout;
 
 use crossterm::event;
 use crossterm::event::Event;
 use std::time::Duration;
-use tui::backend::Backend;
+use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> ParserResult {
+pub fn run_app<B: Backend>(
+    mut terminal: Terminal<CrosstermBackend<Stdout>>,
+    mut app: App,
+) -> ParserResult {
     app.set_current_selected_tab(true);
 
     loop {

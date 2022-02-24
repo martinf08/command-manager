@@ -15,8 +15,8 @@ pub enum SubMode {
 pub enum EventType {
     Command,
     Namespace,
-    Tag,
     None,
+    Tag,
 }
 
 pub enum Confirm {
@@ -25,20 +25,28 @@ pub enum Confirm {
     Hide,
 }
 
+pub enum Tab {
+    Tab1,
+    Tab2,
+    Tab3,
+}
+
 pub struct EventState {
+    pub confirm: Confirm,
+    pub event_type: EventType,
     pub mode: Mode,
     pub sub_mode: SubMode,
-    pub event_type: EventType,
-    pub confirm: Confirm,
+    pub tab: Tab,
 }
 
 impl EventState {
     pub fn new() -> Self {
         EventState {
+            confirm: Confirm::Hide,
+            event_type: EventType::None,
             mode: Mode::Normal,
             sub_mode: SubMode::None,
-            event_type: EventType::None,
-            confirm: Confirm::Hide,
+            tab: Tab::Tab1,
         }
     }
 }

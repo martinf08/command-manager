@@ -3,6 +3,7 @@
 use crate::fixtures;
 use rusqlite::Connection;
 use std::error::Error;
+use std::io::ErrorKind;
 use std::path::Path;
 
 pub struct Db {
@@ -24,22 +25,25 @@ impl Db {
             Ok(f) => {
                 let db_path = Path::new(&f);
                 if !db_path.is_file() {
-                    panic!("CM_DB env is not a file");
+                    return Err(Box::new(std::io::Error::new(
+                        ErrorKind::NotFound,
+                        "CM_DB env var is not a file",
+                    )));
                 }
-                f
+                Ok(f)
             }
             Err(_) => {
-                let home = dirs::home_dir().expect("Could not find home directory");
+                let home = dirs::home_dir()?;
                 let db_namespace = home.join(".cm");
                 std::fs::create_dir_all(&db_namespace)?;
                 let db_path = db_namespace.join("command_manager.db");
-                let db = db_path.to_str().expect("Unable to get db path");
+                let db = db_path.to_str()?;
 
-                db.to_string()
+                Ok(db.to_string())
             }
         };
 
-        Ok(db_file)
+        db_file
     }
 
     pub fn init_db(&self) -> Result<(), Box<dyn Error>> {
