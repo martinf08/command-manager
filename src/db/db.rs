@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use crate::fixtures;
+use crate::db::fixtures;
 use rusqlite::Connection;
 use std::error::Error;
 use std::io::ErrorKind;

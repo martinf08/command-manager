@@ -2,10 +2,9 @@ use crate::app::event_state::EventState;
 use crate::app::input::CursorPosition;
 use crate::app::state::{StatefulList, TabsState};
 use crate::core::config::Config;
-use crate::Db;
+use crate::db::db::Db;
 
 use std::error::Error;
-use crate::db::Db;
 
 pub struct App {
     pub commands: StatefulList<String>,
