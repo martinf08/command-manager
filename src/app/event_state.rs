@@ -21,7 +21,7 @@ pub enum EventType {
 
 pub enum Confirm {
     Confirmed,
-    Display(String),
+    Display,
     Hide,
 }
 
@@ -32,11 +32,11 @@ pub enum Tab {
 }
 
 pub struct EventState {
-     confirm: Confirm,
-     event_type: EventType,
-     mode: Mode,
-     sub_mode: SubMode,
-     tab: Tab,
+    confirm: Confirm,
+    event_type: EventType,
+    mode: Mode,
+    sub_mode: SubMode,
+    tab: Tab,
 }
 
 impl EventState {
@@ -58,9 +58,9 @@ impl EventState {
         &self.sub_mode
     }
 
-   pub fn get_event_type(&self) -> &EventType {
-       &self.event_type
-   }
+    pub fn get_event_type(&self) -> &EventType {
+        &self.event_type
+    }
 
     pub fn get_confirm(&self) -> &Confirm {
         &self.confirm

@@ -36,4 +36,17 @@ impl App {
             tags: StatefulList::with_items(tags),
         })
     }
+
+    pub fn set_commands_tags_from_position(&mut self, index: usize) -> Result<(), Box<dyn Error>> {
+        let namespace = self.namespaces.items[index].clone();
+
+        let (commands, tags) = self
+            .db
+            .get_commands_and_tags(Some(namespace))?;
+
+        self.commands = StatefulList::with_items(commands);
+        self.tags = StatefulList::with_items(tags);
+
+        Ok(())
+    }
 }
