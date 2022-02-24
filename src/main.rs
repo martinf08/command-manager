@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let app = App::new("Command Manager");
+    let app = App::new();
     let result = run(&mut terminal, app);
 
     // restore terminal

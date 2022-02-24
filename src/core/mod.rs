@@ -3,6 +3,7 @@ use crate::App;
 use tui::backend::Backend;
 use tui::Terminal;
 
+pub mod config;
 pub mod engine;
 mod parser;
 
