@@ -1,6 +1,6 @@
 use crate::app::add::{AddType, InputMode};
 use crate::app::app::{App, State, StatefulList};
-use crate::app::event_state::{Confirm, Mode, Tab};
+use crate::app::event_state::{Confirm, EventState, Mode, Tab};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::error::Error;
 use crate::app::state::State;
@@ -14,6 +14,11 @@ impl KeyParser {
         KeyParser::process_key_code(key_event.code, app)
     }
 
+    fn quit(app: &mut App) -> ParserResult {
+        app.quit = true;
+        Ok(None)
+    }
+
     fn process_key_code(key_code: KeyCode, app: &mut App) -> ParserResult {
         if key_code == KeyCode::Char('q') && (app.mode == Mode::Normal || app.mode == Mode::Delete)
         {
@@ -21,10 +26,15 @@ impl KeyParser {
             return Ok(None);
         }
 
+        if app.event_state.get_confirm() == Confirm::Confirmed {
+            app.event_state = EventState::default();
+            return Ok(None)
+        }
+
         match app.event_state.get_tab() {
             Tab::Tab1 => KeyParser::process_tab_1(key_code, app),
             // Tab::Tab2 => KeyParser::process_tab_2(key_code, app),
-            // Tab::Tab3 => KeyParser::process_tab_3(key_code, app),
+            // Tab::Tab3 => KeyParser::process_tab_3(key_code, app), //Todo uncomment
             _ => Ok(None),
         }
     }
@@ -233,7 +243,8 @@ impl KeyParser {
 
                     app.namespaces.current_selected = true;
                     app.namespaces.state.select(Some(0));
-                    app.set_commands_tags_from_position(app.namespaces.current());                }
+                    app.set_commands_tags_from_position(app.namespaces.current());
+                }
             },
         }
 
@@ -260,7 +271,7 @@ impl KeyParser {
     fn enter(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => match app.event_state.get_confirm() {
-                Confirm::Display()=> {
+                Confirm::Display() => {
                     app.event_state.set_confirm(Confirm::Confirmed);
 
                     return Ok(Some((
@@ -295,7 +306,7 @@ impl KeyParser {
 
     fn esc(app: &mut App) -> ParserResult {
         app.event_state.set_mode(Mode::Normal);
-        match app.event_state.get_confirm(){
+        match app.event_state.get_confirm() {
             Confirm::Display => {
                 app.commands.current_selected = true;
                 app.tags.current_selected = true;
@@ -310,7 +321,7 @@ impl KeyParser {
                 app.namespaces.unselect();
 
                 app.tabs.current_selected = true;
-            },
+            }
             _ => {}
         }
 

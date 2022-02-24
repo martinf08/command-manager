@@ -12,6 +12,7 @@ pub struct App {
     pub db: Db,
     pub event_state: EventState,
     pub namespaces: StatefulList<String>,
+    pub quit: bool,
     pub tabs: TabsState,
     pub tags: StatefulList<String>,
 }
@@ -30,8 +31,9 @@ impl App {
             commands: StatefulList::with_items(commands),
             cursor_position: None,
             db,
-            event_state: EventState::new(),
+            event_state: EventState::default(),
             namespaces: StatefulList::with_items(namespaces),
+            quit: false,
             tabs: TabsState::new(&config),
             tags: StatefulList::with_items(tags),
         })

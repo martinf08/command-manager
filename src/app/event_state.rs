@@ -19,6 +19,7 @@ pub enum EventType {
     Tag,
 }
 
+#[derive(PartialEq)]
 pub enum Confirm {
     Confirmed,
     Display,
@@ -39,8 +40,8 @@ pub struct EventState {
     tab: Tab,
 }
 
-impl EventState {
-    pub fn new() -> Self {
+impl Default for EventState {
+    fn default() -> Self {
         EventState {
             confirm: Confirm::Hide,
             event_type: EventType::None,
@@ -49,7 +50,9 @@ impl EventState {
             tab: Tab::Tab1,
         }
     }
+}
 
+impl EventState {
     pub fn get_mode(&self) -> &Mode {
         &self.mode
     }
