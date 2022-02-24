@@ -9,11 +9,11 @@ use std::time::Duration;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 
-pub fn run_app<B: Backend>(
-    mut terminal: Terminal<CrosstermBackend<Stdout>>,
+pub fn run_app(
+    mut terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     mut app: App,
 ) -> ParserResult {
-    app.set_current_selected_tab(true);
+    app.tabs.current_selected = true;
 
     loop {
         if app.quit {

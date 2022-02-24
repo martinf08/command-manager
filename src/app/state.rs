@@ -24,7 +24,7 @@ impl State for TabsState {
 
 impl TabsState {
     pub fn new(config: &Config) -> Self {
-        let titles = config.tabs.iter().map(|tab| tab.name.clone()).collect();
+        let titles = config.tabs.iter().map(|tab| tab.clone()).collect();
 
         TabsState {
             titles,

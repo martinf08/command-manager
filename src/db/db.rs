@@ -33,11 +33,11 @@ impl Db {
                 Ok(f)
             }
             Err(_) => {
-                let home = dirs::home_dir()?;
+                let home = dirs::home_dir().ok_or("No home directory found")?;
                 let db_namespace = home.join(".cm");
                 std::fs::create_dir_all(&db_namespace)?;
                 let db_path = db_namespace.join("command_manager.db");
-                let db = db_path.to_str()?;
+                let db = db_path.to_str().ok_or("Could not convert db path to string")?;
 
                 Ok(db.to_string())
             }

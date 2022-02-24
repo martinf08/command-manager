@@ -1,6 +1,6 @@
-use crate::app::add::{AddType, InputMode};
-use crate::app::app::{App, Mode};
+use crate::app::app::App;
 
+use crate::app::event_state::{Confirm, Mode, Tab};
 use crate::ui::utils::{
     get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
     set_cursor_position,
@@ -40,11 +40,10 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .highlight_style(get_highlight_style());
 
     f.render_widget(tabs, chunks[0]);
-    match app.tabs.index {
-        0 => draw_first_tab(f, chunks[1], app),
-        1 => draw_second_tab(f, chunks[1], app),
-        2 => draw_second_tab(f, chunks[1], app),
-        _ => unreachable!(),
+    match app.event_state.get_tab() {
+        Tab::Tab1 => draw_first_tab(f, chunks[1], app),
+        Tab::Tab2 => draw_second_tab(f, chunks[1], app),
+        Tab::Tab3 => draw_second_tab(f, chunks[1], app),
     };
 }
 
@@ -133,17 +132,17 @@ where
         &mut app.tags.state,
     );
 
-    if app.show_command_confirmation {
+    if app.event_state.get_confirm() == &Confirm::Display {
         let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
 
         let text = vec![
             Spans::from(Span::styled(
-                app.confirmation_popup.message,
+                "Execute command ?", //Todo config
                 Style::default().fg(Color::White),
             )),
             Spans::from(Span::raw("")),
             Spans::from(Span::styled(
-                app.confirmation_popup.confirm,
+                "Yes", //Todo config
                 Style::default()
                     .add_modifier(Modifier::BOLD)
                     .fg(Color::Red)
@@ -161,63 +160,63 @@ where
         command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
     }
 
-    match *app.get_mode() {
-        Mode::Add => match &app.add.add_type {
-            Some(t) => match t {
-                AddType::Command => match app.add.input_mode {
-                    Some(InputMode::Command) | Some(InputMode::Tag) => {
-                        if app.namespaces.state.selected().is_some() {
-                            if app.add.input_mode == Some(InputMode::Command) {
-                                command_text.push_str("Type the command");
-                            } else {
-                                command_text.push_str("Type the tag");
-                            }
-                            display_add_input_area(app, f, chunks[1])
-                        }
-                    }
-                    _ => (),
-                },
-                AddType::Namespace => {
-                    if let Some(InputMode::Namespace) = app.add.input_mode {
-                        display_add_input_area(app, f, chunks[1])
-                    }
-                }
-            },
-            None => {
-                display_add_type_selector(f, chunks[1]);
-                command_text =
-                    "Caution: Namespace must be selected before adding a command.".to_string();
-            }
-        },
-        Mode::Delete => {
-            if app.show_delete_confirmation
-                && (app.commands.state.selected().is_some()
-                    || app.namespaces.state.selected().is_some())
-            {
-                let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
-
-                let text = vec![
-                    Spans::from(Span::styled(
-                        app.confirmation_popup.message,
-                        Style::default().fg(Color::White),
-                    )),
-                    Spans::from(Span::raw("")),
-                    Spans::from(Span::styled(
-                        app.confirmation_popup.confirm,
-                        Style::default()
-                            .add_modifier(Modifier::BOLD)
-                            .fg(Color::Red)
-                            .bg(Color::Gray),
-                    )),
-                ];
-
-                let p = Paragraph::new(text).alignment(Alignment::Center);
-
-                f.render_widget(p, layout[0]);
-            }
-        }
-        _ => {}
-    }
+    // match *app.get_mode() {
+    //     Mode::Add => match &app.add.add_type {
+    //         Some(t) => match t {
+    //             AddType::Command => match app.add.input_mode {
+    //                 Some(InputMode::Command) | Some(InputMode::Tag) => {
+    //                     if app.namespaces.state.selected().is_some() {
+    //                         if app.add.input_mode == Some(InputMode::Command) {
+    //                             command_text.push_str("Type the command");
+    //                         } else {
+    //                             command_text.push_str("Type the tag");
+    //                         }
+    //                         display_add_input_area(app, f, chunks[1])
+    //                     }
+    //                 }
+    //                 _ => (),
+    //             },
+    //             AddType::Namespace => {
+    //                 if let Some(InputMode::Namespace) = app.add.input_mode {
+    //                     display_add_input_area(app, f, chunks[1])
+    //                 }
+    //             }
+    //         },
+    //         None => {
+    //             display_add_type_selector(f, chunks[1]);
+    //             command_text =
+    //                 "Caution: Namespace must be selected before adding a command.".to_string();
+    //         }
+    //     },
+    //     Mode::Delete => {
+    //         if app.show_delete_confirmation
+    //             && (app.commands.state.selected().is_some()
+    //                 || app.namespaces.state.selected().is_some())
+    //         {
+    //             let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
+    //
+    //             let text = vec![
+    //                 Spans::from(Span::styled(
+    //                     app.confirmation_popup.message,
+    //                     Style::default().fg(Color::White),
+    //                 )),
+    //                 Spans::from(Span::raw("")),
+    //                 Spans::from(Span::styled(
+    //                     app.confirmation_popup.confirm,
+    //                     Style::default()
+    //                         .add_modifier(Modifier::BOLD)
+    //                         .fg(Color::Red)
+    //                         .bg(Color::Gray),
+    //                 )),
+    //             ];
+    //
+    //             let p = Paragraph::new(text).alignment(Alignment::Center);
+    //
+    //             f.render_widget(p, layout[0]);
+    //         }
+    //     }
+    //     _ => {}
+    // }
 
     let detail_command_paragraph = Paragraph::new(command_text)
         .alignment(Alignment::Left)
@@ -233,32 +232,32 @@ where
     f.render_widget(detail_command_paragraph, sub_chunks[1]);
 }
 
-fn display_add_input_area(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
-    let title = match &app.add.add_type {
-        Some(t) => match t {
-            AddType::Command => "Command".to_string(),
-            AddType::Namespace => "Namespace".to_string(),
-        },
-        None => "".to_string(),
-    };
-
-    let rects = get_popup_layout(title, f, chunk, None, Some((100, 100)));
-
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(100)].as_ref())
-        .margin(1)
-        .split(rects[0]);
-
-    let p = Paragraph::new(app.add.input.clone())
-        .block(Block::default().style(Style::default().fg(Color::White)))
-        .style(Style::default().fg(Color::Yellow))
-        .wrap(Wrap { trim: true });
-
-    set_cursor_position(app, f, chunks[0], app.add.input.clone());
-
-    f.render_widget(p, chunks[0]);
-}
+// fn display_add_input_area(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
+//     let title = match &app.add.add_type {
+//         Some(t) => match t {
+//             AddType::Command => "Command".to_string(),
+//             AddType::Namespace => "Namespace".to_string(),
+//         },
+//         None => "".to_string(),
+//     };
+//
+//     let rects = get_popup_layout(title, f, chunk, None, Some((100, 100)));
+//
+//     let chunks = Layout::default()
+//         .direction(Direction::Horizontal)
+//         .constraints([Constraint::Percentage(100)].as_ref())
+//         .margin(1)
+//         .split(rects[0]);
+//
+//     let p = Paragraph::new(app.add.input.clone())
+//         .block(Block::default().style(Style::default().fg(Color::White)))
+//         .style(Style::default().fg(Color::Yellow))
+//         .wrap(Wrap { trim: true });
+//
+//     set_cursor_position(app, f, chunks[0], app.add.input.clone());
+//
+//     f.render_widget(p, chunks[0]);
+// }
 
 fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
     let rects = get_popup_layout("Element to add".to_string(), f, rect, Some(3), None);

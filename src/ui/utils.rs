@@ -1,4 +1,4 @@
-use crate::app::app::CursorPosition;
+use crate::app::input::CursorPosition;
 use crate::App;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};

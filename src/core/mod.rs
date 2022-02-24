@@ -1,8 +1,9 @@
 use crate::core::cmd::Cmd;
-use crate::core::parser::ParserResult;
-use crate::{App, Cmd};
+use crate::App;
 use crossterm::execute;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use std::error::Error;
 use std::io;
 use tui::backend::{Backend, CrosstermBackend};
@@ -25,7 +26,7 @@ impl Engine {
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
 
-        let result = engine::run_app(terminal, app);
+        let result = engine::run_app(&mut terminal, app);
 
         // restore terminal
         disable_raw_mode()?;
