@@ -7,9 +7,7 @@ mod widget;
 use crate::app::app::App;
 use crate::core::Engine;
 
-use std::error::Error;
-
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = App::new()?;
     Engine::run(app)?;
 
