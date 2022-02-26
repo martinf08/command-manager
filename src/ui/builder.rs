@@ -1,6 +1,9 @@
+use std::cell::{Ref, RefCell, RefMut};
+use std::rc::Rc;
 use tui::style::{Color, Style};
 use tui::widgets::{Block, Borders, List, ListItem};
 use crate::App;
+use crate::app::state::StatefulList;
 use crate::core::config::Config;
 
 pub struct UiBuilder {
@@ -12,11 +15,12 @@ impl UiBuilder {
         UiBuilder { config: Config::new() }
     }
 
-    pub fn create_list(&self, title: String, items: Vec<String>, selected: bool) -> List {
+    pub fn create_list(&self, title: String, items: Ref<StatefulList<String>>, selected: bool) -> List {
         let items = items
-            .into_iter()
+            .items
+            .iter()
             .filter(|item| !item.trim().is_empty())
-            .map(|item| ListItem::new(item).style(Style::default().fg(Color::White)))
+            .map(|item| ListItem::new(item.clone()).style(Style::default().fg(Color::White)))
             .collect::<Vec<ListItem>>();
 
         List::new(items)

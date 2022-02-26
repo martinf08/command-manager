@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use crate::app::app::App;
 
 use crate::app::event_state::{Confirm, Mode, Tab};
@@ -81,9 +82,9 @@ where
         )
         .split(sub_chunks[0]);
 
-    let list = builder.create_list(config.namespace_title, app.namespaces.items.clone(), app.namespaces.current_selected);
+    let list = builder.create_list(config.namespace_title, app.namespaces.as_ref().borrow(), app.namespaces.as_ref().borrow().current_selected);
 
-    f.render_stateful_widget(list, chunks[0], &mut app.namespaces.state);
+    f.render_stateful_widget(list, chunks[0], &mut app.namespaces.as_ref().borrow_mut().state);
 
     let vec_to_style = |v: Vec<String>| -> Vec<ListItem> {
         v.into_iter()

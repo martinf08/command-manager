@@ -1,3 +1,5 @@
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
 use crate::app::app::App;
 use crate::app::event_state::{Confirm, EventState, Mode, Tab};
 use crate::app::state::State;
@@ -178,9 +180,11 @@ impl KeyParser {
     // }
 
     fn move_right(app: &mut App) -> ParserResult {
-        match app.namespaces.state.selected() {
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
+
+        match namespaces.state.selected() {
             Some(_) => {
-                app.namespaces.current_selected = false;
+                namespaces.current_selected = false;
 
                 app.commands.current_selected = true;
                 app.tags.current_selected = true;
@@ -197,7 +201,7 @@ impl KeyParser {
     fn move_left(app: &mut App) -> ParserResult {
         match app.commands.state.selected() {
             Some(_) => {
-                app.namespaces.current_selected = true;
+                app.namespaces.as_ref().borrow_mut().current_selected = true;
 
                 app.commands.current_selected = false;
                 app.tags.current_selected = false;
@@ -205,13 +209,13 @@ impl KeyParser {
                 app.commands.unselect();
                 app.tags.unselect();
             }
-            None => match app.namespaces.state.selected() {
+            None => match app.namespaces.as_ref().borrow().state.selected() {
                 Some(_) => {
-                    app.namespaces.current_selected = false;
+                    app.namespaces.as_ref().borrow_mut().current_selected = false;
                     app.commands.current_selected = false;
                     app.tags.current_selected = false;
 
-                    app.namespaces.unselect();
+                    app.namespaces.as_ref().borrow_mut().unselect();
                     app.commands.unselect();
                     app.tags.unselect();
 
@@ -224,9 +228,11 @@ impl KeyParser {
     }
 
     fn move_down(app: &mut App) -> ParserResult {
-        if app.namespaces.items.is_empty() {
+        if app.namespaces.as_ref().borrow().items.is_empty() {
             return Ok(None);
         }
+
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
 
         match app.commands.state.selected() {
             Some(_) => {
@@ -235,17 +241,30 @@ impl KeyParser {
                     app.tags.next();
                 }
             }
-            None => match app.namespaces.state.selected() {
+            None => match namespaces.state.selected() {
                 Some(_) => {
-                    app.namespaces.next();
-                    app.set_commands_tags_from_position(app.namespaces.current());
+                    namespaces.next();
+
+                    let index = namespaces.current();
+                    let namespace = namespaces.items[index].clone();
+
+                    let (commands, tags) = app.db.get_commands_and_tags(Some(namespace))?;
+
+                    app.commands = StatefulList::with_items(commands);
+                    app.tags = StatefulList::with_items(tags);
                 }
                 None => {
                     app.tabs.current_selected = false;
 
-                    app.namespaces.current_selected = true;
-                    app.namespaces.state.select(Some(0));
-                    app.set_commands_tags_from_position(app.namespaces.current());
+                    namespaces.current_selected = true;
+                    namespaces.state.select(Some(0));
+
+                    let index = namespaces.current();
+                    let namespace = namespaces.items[index].clone();
+                    let (commands, tags) = app.db.get_commands_and_tags(Some(namespace))?;
+
+                    app.commands = StatefulList::with_items(commands);
+                    app.tags = StatefulList::with_items(tags);
                 }
             },
         }
@@ -262,8 +281,14 @@ impl KeyParser {
                 }
             }
             None => {
-                app.namespaces.previous();
-                app.set_commands_tags_from_position(app.namespaces.current());
+                app.namespaces.as_ref().borrow_mut().previous();
+
+                let index = app.namespaces.as_ref().borrow().current();
+                let namespace = app.namespaces.as_ref().borrow().items[index].clone();
+                let (commands, tags) = app.db.get_commands_and_tags(Some(namespace))?;
+
+                app.commands = StatefulList::with_items(commands);
+                app.tags = StatefulList::with_items(tags);
             }
         };
 
@@ -289,9 +314,9 @@ impl KeyParser {
                 }
                 _ => {}
             },
-            None => match app.namespaces.state.selected() {
+            None => match app.namespaces.as_ref().borrow().state.selected() {
                 Some(_) => {
-                    app.namespaces.current_selected = false;
+                    app.namespaces.as_ref().borrow_mut().current_selected = false;
 
                     app.commands.current_selected = true;
                     app.tags.current_selected = true;
@@ -319,8 +344,8 @@ impl KeyParser {
                 app.commands.current_selected = false;
                 app.tags.current_selected = false;
 
-                app.namespaces.current_selected = false;
-                app.namespaces.unselect();
+                app.namespaces.as_ref().borrow_mut().current_selected = false;
+                app.namespaces.as_ref().borrow_mut().unselect();
 
                 app.tabs.current_selected = true;
             }
