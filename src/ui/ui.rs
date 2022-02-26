@@ -1,7 +1,9 @@
-use std::borrow::Borrow;
 use crate::app::app::App;
+use std::borrow::Borrow;
 
 use crate::app::event_state::{Confirm, Mode, Tab};
+use crate::core::config::Config;
+use crate::ui::builder::{LayoutBuilder, UiBuilder};
 use crate::ui::utils::{
     get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
     set_cursor_position,
@@ -13,8 +15,6 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
-use crate::core::config::Config;
-use crate::ui::builder::UiBuilder;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -54,37 +54,24 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
 where
     B: Backend,
 {
-
     let config = Config::new();
     let builder = UiBuilder::new();
 
-    let sub_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage(50),
-                Constraint::Percentage(20),
-                Constraint::Percentage(30),
-            ]
-            .as_ref(),
-        )
-        .split(rect);
+    let full_block = LayoutBuilder::create(vec![50, 20, 30], Direction::Vertical).split(rect);
+    let middle_block =
+        LayoutBuilder::create(vec![15, 75, 10], Direction::Horizontal).split(full_block[0]);
 
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage(15),
-                Constraint::Percentage(75),
-                Constraint::Percentage(10),
-            ]
-            .as_ref(),
-        )
-        .split(sub_chunks[0]);
+    let list = builder.create_list(
+        config.namespace_title,
+        app.namespaces.as_ref().borrow(),
+        app.namespaces.as_ref().borrow().current_selected,
+    );
 
-    let list = builder.create_list(config.namespace_title, app.namespaces.as_ref().borrow(), app.namespaces.as_ref().borrow().current_selected);
-
-    f.render_stateful_widget(list, chunks[0], &mut app.namespaces.as_ref().borrow_mut().state);
+    f.render_stateful_widget(
+        list,
+        middle_block[0],
+        &mut app.namespaces.as_ref().borrow_mut().state,
+    );
 
     let vec_to_style = |v: Vec<String>| -> Vec<ListItem> {
         v.into_iter()
@@ -103,7 +90,7 @@ where
             ))
             .highlight_style(get_highlight_style())
             .highlight_symbol("⟩"),
-        chunks[1],
+        middle_block[1],
         &mut app.commands.state,
     );
 
@@ -117,12 +104,12 @@ where
                 app.commands.current_selected,
             ))
             .highlight_style(get_highlight_style()),
-        chunks[2],
+        middle_block[2],
         &mut app.tags.state,
     );
 
     if app.event_state.get_confirm() == &Confirm::Display {
-        let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
+        let layout = get_popup_layout("Confirm".to_string(), f, middle_block[1], Some(3), None);
 
         let text = vec![
             Spans::from(Span::styled(
@@ -218,7 +205,7 @@ where
                 .style(Style::default().fg(Color::White)),
         );
 
-    f.render_widget(detail_command_paragraph, sub_chunks[1]);
+    f.render_widget(detail_command_paragraph, full_block[1]);
 }
 
 // fn display_add_input_area(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {

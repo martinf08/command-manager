@@ -37,7 +37,9 @@ impl Db {
                 let db_namespace = home.join(".cm");
                 std::fs::create_dir_all(&db_namespace)?;
                 let db_path = db_namespace.join("command_manager.db");
-                let db = db_path.to_str().ok_or("Could not convert db path to string")?;
+                let db = db_path
+                    .to_str()
+                    .ok_or("Could not convert db path to string")?;
 
                 Ok(db.to_string())
             }

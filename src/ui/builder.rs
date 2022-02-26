@@ -1,21 +1,31 @@
-use std::cell::{Ref, RefCell, RefMut};
-use std::rc::Rc;
-use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, List, ListItem};
-use crate::App;
 use crate::app::state::StatefulList;
 use crate::core::config::Config;
+use crate::App;
+use std::cell::{Ref, RefCell, RefMut};
+use std::rc::Rc;
+use tui::layout::{Constraint, Direction, Layout};
+use tui::style::{Color, Style};
+use tui::widgets::{Block, Borders, List, ListItem};
 
 pub struct UiBuilder {
     config: Config,
 }
 
+pub struct LayoutBuilder;
+
 impl UiBuilder {
     pub fn new() -> Self {
-        UiBuilder { config: Config::new() }
+        UiBuilder {
+            config: Config::new(),
+        }
     }
 
-    pub fn create_list(&self, title: String, items: Ref<StatefulList<String>>, selected: bool) -> List {
+    pub fn create_list(
+        &self,
+        title: String,
+        items: Ref<StatefulList<String>>,
+        selected: bool,
+    ) -> List {
         let items = items
             .items
             .iter()
@@ -47,5 +57,18 @@ impl UiBuilder {
             .add_modifier(self.config.color_config.highlight_modifier)
             .fg(self.config.color_config.highlight_fg)
             .bg(self.config.color_config.highlight_bg)
+    }
+}
+
+impl LayoutBuilder {
+    pub fn create(ratio_values: Vec<u16>, direction: Direction) -> Layout {
+        let constraints = ratio_values
+            .iter()
+            .map(|ratio| Constraint::Percentage(*ratio))
+            .collect::<Vec<Constraint>>();
+
+        Layout::default()
+            .direction(direction)
+            .constraints(constraints)
     }
 }

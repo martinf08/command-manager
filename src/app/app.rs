@@ -1,9 +1,9 @@
-use std::cell::RefCell;
 use crate::app::event_state::EventState;
 use crate::app::input::CursorPosition;
 use crate::app::state::{StatefulList, TabsState};
 use crate::core::config::Config;
 use crate::db::db::Db;
+use std::cell::RefCell;
 
 use std::error::Error;
 use std::rc::Rc;
