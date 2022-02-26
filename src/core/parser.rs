@@ -199,9 +199,11 @@ impl KeyParser {
     }
 
     fn move_left(app: &mut App) -> ParserResult {
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
+
         match app.commands.state.selected() {
             Some(_) => {
-                app.namespaces.as_ref().borrow_mut().current_selected = true;
+                namespaces.current_selected = true;
 
                 app.commands.current_selected = false;
                 app.tags.current_selected = false;
@@ -209,13 +211,13 @@ impl KeyParser {
                 app.commands.unselect();
                 app.tags.unselect();
             }
-            None => match app.namespaces.as_ref().borrow().state.selected() {
+            None => match namespaces.state.selected() {
                 Some(_) => {
-                    app.namespaces.as_ref().borrow_mut().current_selected = false;
+                    namespaces.current_selected = false;
                     app.commands.current_selected = false;
                     app.tags.current_selected = false;
 
-                    app.namespaces.as_ref().borrow_mut().unselect();
+                    namespaces.unselect();
                     app.commands.unselect();
                     app.tags.unselect();
 
