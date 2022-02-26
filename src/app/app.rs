@@ -3,20 +3,20 @@ use crate::app::input::CursorPosition;
 use crate::app::state::{StatefulList, TabsState};
 use crate::core::config::Config;
 use crate::db::db::Db;
-use std::cell::RefCell;
 
+use std::cell::RefCell;
 use std::error::Error;
 use std::rc::Rc;
 
 pub struct App {
-    pub commands: StatefulList<String>,
-    pub cursor_position: Option<CursorPosition>,
+    pub tabs: TabsState,
     pub db: Db,
     pub event_state: EventState,
     pub namespaces: Rc<RefCell<StatefulList<String>>>,
+    pub commands: Rc<RefCell<StatefulList<String>>>,
+    pub tags: Rc<RefCell<StatefulList<String>>>,
+    pub cursor_position: Option<CursorPosition>,
     pub quit: bool,
-    pub tabs: TabsState,
-    pub tags: StatefulList<String>,
 }
 
 impl App {
@@ -30,14 +30,14 @@ impl App {
         let (commands, tags) = db.get_commands_and_tags(None)?;
 
         Ok(App {
-            commands: StatefulList::with_items(commands),
-            cursor_position: None,
+            tabs: TabsState::new(&config),
             db,
             event_state: EventState::default(),
+            commands: Rc::new(RefCell::new(StatefulList::with_items(commands))),
             namespaces: Rc::new(RefCell::new(StatefulList::with_items(namespaces))),
+            tags: Rc::new(RefCell::new(StatefulList::with_items(tags))),
+            cursor_position: None,
             quit: false,
-            tabs: TabsState::new(&config),
-            tags: StatefulList::with_items(tags),
         })
     }
 }

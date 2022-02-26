@@ -20,32 +20,27 @@ impl UiBuilder {
         }
     }
 
-    pub fn create_list(
-        &self,
-        title: String,
-        items: Ref<StatefulList<String>>,
-        selected: bool,
-    ) -> List {
-        let items = items
+    pub fn create_list(&self, title: String, items: &RefMut<StatefulList<String>>) -> List {
+        let list_item = items
             .items
             .iter()
             .filter(|item| !item.trim().is_empty())
             .map(|item| ListItem::new(item.clone()).style(Style::default().fg(Color::White)))
             .collect::<Vec<ListItem>>();
 
-        List::new(items)
+        List::new(list_item)
             .block(self.get_block(title))
-            .style(self.get_border_style(selected))
+            .style(self.get_border_style(items.current_selected))
             .highlight_style(self.get_highlight_style())
-            .highlight_symbol(&*self.config.highlight_symbol)
+            .highlight_symbol(&*self.config.names_config.highlight_symbol)
     }
 
     pub fn get_border_style(&self, selected: bool) -> Style {
         if selected {
-            return Style::default().fg(self.config.color_config.selected_border);
+            return Style::default().fg(self.config.font_config.selected_border);
         }
 
-        Style::default().fg(self.config.color_config.border)
+        Style::default().fg(self.config.font_config.border)
     }
 
     pub fn get_block(&self, title: String) -> Block {
@@ -54,9 +49,9 @@ impl UiBuilder {
 
     pub fn get_highlight_style(&self) -> Style {
         Style::default()
-            .add_modifier(self.config.color_config.highlight_modifier)
-            .fg(self.config.color_config.highlight_fg)
-            .bg(self.config.color_config.highlight_bg)
+            .add_modifier(self.config.font_config.highlight_modifier)
+            .fg(self.config.font_config.highlight_fg)
+            .bg(self.config.font_config.highlight_bg)
     }
 }
 

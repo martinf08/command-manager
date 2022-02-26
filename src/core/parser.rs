@@ -6,6 +6,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
 use std::error::Error;
+use std::rc::Rc;
 
 pub struct KeyParser;
 
@@ -181,16 +182,18 @@ impl KeyParser {
 
     fn move_right(app: &mut App) -> ParserResult {
         let mut namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut commands = app.commands.as_ref().borrow_mut();
+        let mut tags = app.tags.as_ref().borrow_mut();
 
         match namespaces.state.selected() {
             Some(_) => {
                 namespaces.current_selected = false;
 
-                app.commands.current_selected = true;
-                app.tags.current_selected = true;
+                commands.current_selected = true;
+                tags.current_selected = true;
 
-                app.commands.state.select(Some(0));
-                app.tags.state.select(Some(0));
+                commands.state.select(Some(0));
+                tags.state.select(Some(0));
             }
             None => app.tabs.next(),
         }
@@ -200,26 +203,28 @@ impl KeyParser {
 
     fn move_left(app: &mut App) -> ParserResult {
         let mut namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut commands = app.commands.as_ref().borrow_mut();
+        let mut tags = app.tags.as_ref().borrow_mut();
 
-        match app.commands.state.selected() {
+        match commands.state.selected() {
             Some(_) => {
                 namespaces.current_selected = true;
 
-                app.commands.current_selected = false;
-                app.tags.current_selected = false;
+                commands.current_selected = false;
+                tags.current_selected = false;
 
-                app.commands.unselect();
-                app.tags.unselect();
+                commands.unselect();
+                tags.unselect();
             }
             None => match namespaces.state.selected() {
                 Some(_) => {
                     namespaces.current_selected = false;
-                    app.commands.current_selected = false;
-                    app.tags.current_selected = false;
+                    commands.current_selected = false;
+                    tags.current_selected = false;
 
                     namespaces.unselect();
-                    app.commands.unselect();
-                    app.tags.unselect();
+                    commands.unselect();
+                    tags.unselect();
 
                     app.tabs.current_selected = true;
                 }
@@ -230,17 +235,19 @@ impl KeyParser {
     }
 
     fn move_down(app: &mut App) -> ParserResult {
-        if app.namespaces.as_ref().borrow().items.is_empty() {
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut commands = app.commands.as_ref().borrow_mut();
+        let mut tags = app.tags.as_ref().borrow_mut();
+
+        if namespaces.items.is_empty() {
             return Ok(None);
         }
 
-        let mut namespaces = app.namespaces.as_ref().borrow_mut();
-
-        match app.commands.state.selected() {
+        match commands.state.selected() {
             Some(_) => {
-                if !app.commands.items.is_empty() {
-                    app.commands.next();
-                    app.tags.next();
+                if !commands.items.is_empty() {
+                    commands.next();
+                    tags.next();
                 }
             }
             None => match namespaces.state.selected() {
@@ -250,10 +257,9 @@ impl KeyParser {
                     let index = namespaces.current();
                     let namespace = namespaces.items[index].clone();
 
-                    let (commands, tags) = app.db.get_commands_and_tags(Some(namespace))?;
-
-                    app.commands = StatefulList::with_items(commands);
-                    app.tags = StatefulList::with_items(tags);
+                    let (new_commands, new_tags) = app.db.get_commands_and_tags(Some(namespace))?;
+                    commands.items = new_commands;
+                    tags.items = new_tags;
                 }
                 None => {
                     app.tabs.current_selected = false;
@@ -263,10 +269,10 @@ impl KeyParser {
 
                     let index = namespaces.current();
                     let namespace = namespaces.items[index].clone();
-                    let (commands, tags) = app.db.get_commands_and_tags(Some(namespace))?;
 
-                    app.commands = StatefulList::with_items(commands);
-                    app.tags = StatefulList::with_items(tags);
+                    let (new_commands, new_tags) = app.db.get_commands_and_tags(Some(namespace))?;
+                    commands.items = new_commands;
+                    tags.items = new_tags;
                 }
             },
         }
@@ -275,22 +281,26 @@ impl KeyParser {
     }
 
     fn move_up(app: &mut App) -> ParserResult {
-        match app.commands.state.selected() {
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut commands = app.commands.as_ref().borrow_mut();
+        let mut tags = app.tags.as_ref().borrow_mut();
+
+        match commands.state.selected() {
             Some(_) => {
-                if !app.commands.items.is_empty() {
-                    app.commands.previous();
-                    app.tags.previous();
+                if !commands.items.is_empty() {
+                    commands.previous();
+                    tags.previous();
                 }
             }
             None => {
-                app.namespaces.as_ref().borrow_mut().previous();
+                namespaces.previous();
 
-                let index = app.namespaces.as_ref().borrow().current();
-                let namespace = app.namespaces.as_ref().borrow().items[index].clone();
-                let (commands, tags) = app.db.get_commands_and_tags(Some(namespace))?;
+                let index = namespaces.current();
+                let namespace = namespaces.items[index].clone();
 
-                app.commands = StatefulList::with_items(commands);
-                app.tags = StatefulList::with_items(tags);
+                let (new_commands, new_tags) = app.db.get_commands_and_tags(Some(namespace))?;
+                commands.items = new_commands;
+                tags.items = new_tags;
             }
         };
 
@@ -298,33 +308,37 @@ impl KeyParser {
     }
 
     fn enter(app: &mut App) -> ParserResult {
-        match app.commands.state.selected() {
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut commands = app.commands.as_ref().borrow_mut();
+        let mut tags = app.tags.as_ref().borrow_mut();
+
+        match commands.state.selected() {
             Some(_) => match app.event_state.get_confirm() {
                 Confirm::Display => {
                     app.event_state.set_confirm(Confirm::Confirmed);
 
                     return Ok(Some((
-                        app.commands.items[app.commands.current()].clone(),
-                        app.tags.items[app.tags.current()].clone(),
+                        commands.items[commands.current()].clone(),
+                        tags.items[tags.current()].clone(),
                     )));
                 }
                 Confirm::Hide => {
-                    app.commands.current_selected = false;
-                    app.tags.current_selected = false;
+                    commands.current_selected = false;
+                    tags.current_selected = false;
 
                     app.event_state.set_confirm(Confirm::Display);
                 }
                 _ => {}
             },
-            None => match app.namespaces.as_ref().borrow().state.selected() {
+            None => match namespaces.state.selected() {
                 Some(_) => {
-                    app.namespaces.as_ref().borrow_mut().current_selected = false;
+                    namespaces.current_selected = false;
 
-                    app.commands.current_selected = true;
-                    app.tags.current_selected = true;
+                    commands.current_selected = true;
+                    tags.current_selected = true;
 
-                    app.commands.state.select(Some(0));
-                    app.tags.state.select(Some(0));
+                    commands.state.select(Some(0));
+                    tags.state.select(Some(0));
                 }
                 None => {}
             },
@@ -335,19 +349,24 @@ impl KeyParser {
 
     fn esc(app: &mut App) -> ParserResult {
         app.event_state.set_mode(Mode::Normal);
+
+        let mut namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut commands = app.commands.as_ref().borrow_mut();
+        let mut tags = app.tags.as_ref().borrow_mut();
+
         match app.event_state.get_confirm() {
             Confirm::Display => {
-                app.commands.current_selected = true;
-                app.tags.current_selected = true;
+                commands.current_selected = true;
+                tags.current_selected = true;
 
                 app.event_state.set_confirm(Confirm::Hide);
             }
             Confirm::Hide => {
-                app.commands.current_selected = false;
-                app.tags.current_selected = false;
+                commands.current_selected = false;
+                tags.current_selected = false;
 
-                app.namespaces.as_ref().borrow_mut().current_selected = false;
-                app.namespaces.as_ref().borrow_mut().unselect();
+                namespaces.current_selected = false;
+                namespaces.unselect();
 
                 app.tabs.current_selected = true;
             }

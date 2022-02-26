@@ -17,6 +17,8 @@ use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    let config = Config::new();
+
     let chunks = Layout::default()
         .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
         .split(f.size());
@@ -35,7 +37,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .collect::<Vec<Spans>>();
 
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Tabs"))
+        .block(Block::default().borders(Borders::ALL))
         .select(app.tabs.index)
         .style(get_border_style_from_selected_status(
             app.tabs.current_selected,
@@ -61,52 +63,21 @@ where
     let middle_block =
         LayoutBuilder::create(vec![15, 75, 10], Direction::Horizontal).split(full_block[0]);
 
-    let list = builder.create_list(
-        config.namespace_title,
-        app.namespaces.as_ref().borrow(),
-        app.namespaces.as_ref().borrow().current_selected,
-    );
+    // Display namespaces at left block
+    let mut namespaces = app.namespaces.as_ref().borrow_mut();
+    let namespaces_list = builder.create_list(config.names_config.namespaces_title, &namespaces);
+    f.render_stateful_widget(namespaces_list, middle_block[0], &mut namespaces.state);
 
-    f.render_stateful_widget(
-        list,
-        middle_block[0],
-        &mut app.namespaces.as_ref().borrow_mut().state,
-    );
+    //Display commands at middle block
+    let mut commands = app.commands.as_ref().borrow_mut();
+    let commands_list = builder.create_list(config.names_config.commands_title, &commands);
+    f.render_stateful_widget(commands_list, middle_block[1], &mut commands.state);
 
-    let vec_to_style = |v: Vec<String>| -> Vec<ListItem> {
-        v.into_iter()
-            .map(|v| ListItem::new(v).style(Style::default().fg(Color::White)))
-            .collect::<Vec<ListItem>>()
-    };
+    //Display tags at right block
+    let mut tags = app.tags.as_ref().borrow_mut();
+    let tags_list = builder.create_list(config.names_config.tags_title, &tags);
 
-    let commands = app.commands.items.clone();
-    let command_items = vec_to_style(commands);
-
-    f.render_stateful_widget(
-        List::new(command_items)
-            .block(Block::default().title("Commands").borders(Borders::ALL))
-            .style(get_border_style_from_selected_status(
-                app.commands.current_selected,
-            ))
-            .highlight_style(get_highlight_style())
-            .highlight_symbol("⟩"),
-        middle_block[1],
-        &mut app.commands.state,
-    );
-
-    let tags = app.tags.items.clone();
-    let tag_items = vec_to_style(tags);
-
-    f.render_stateful_widget(
-        List::new(tag_items)
-            .block(Block::default().title("Tags").borders(Borders::ALL))
-            .style(get_border_style_from_selected_status(
-                app.commands.current_selected,
-            ))
-            .highlight_style(get_highlight_style()),
-        middle_block[2],
-        &mut app.tags.state,
-    );
+    f.render_stateful_widget(tags_list, middle_block[2], &mut tags.state);
 
     if app.event_state.get_confirm() == &Confirm::Display {
         let layout = get_popup_layout("Confirm".to_string(), f, middle_block[1], Some(3), None);
@@ -132,8 +103,8 @@ where
     }
 
     let mut command_text = "\n".to_string();
-    if app.commands.state.selected().is_some() && app.commands.items.len() > 0 {
-        command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
+    if commands.state.selected().is_some() && commands.items.len() > 0 {
+        command_text.push_str(&*commands.items[commands.state.selected().unwrap()].clone());
     }
 
     // match *app.get_mode() {
