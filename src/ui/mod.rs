@@ -1,5 +1,6 @@
 pub mod ui;
 mod utils;
+mod builder;
 
 use crate::App;
 

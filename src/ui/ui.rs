@@ -12,6 +12,8 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
+use crate::core::config::Config;
+use crate::ui::builder::UiBuilder;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -51,6 +53,10 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
 where
     B: Backend,
 {
+
+    let config = Config::new();
+    let builder = UiBuilder::new();
+
     let sub_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -75,25 +81,7 @@ where
         )
         .split(sub_chunks[0]);
 
-    let bloc = Block::default().title("namespaces").borders(Borders::ALL);
-
-    f.render_widget(bloc, chunks[0]);
-
-    let items = app
-        .namespaces
-        .items
-        .iter()
-        .filter(|item| !item.trim().is_empty())
-        .map(|item| ListItem::new(item.as_str()).style(Style::default().fg(Color::White)))
-        .collect::<Vec<ListItem>>();
-
-    let list = List::new(items)
-        .block(Block::default().title("Namespaces").borders(Borders::ALL))
-        .style(get_border_style_from_selected_status(
-            app.namespaces.current_selected,
-        ))
-        .highlight_style(get_highlight_style())
-        .highlight_symbol("⟩");
+    let list = builder.create_list(config.namespace_title, app.namespaces.items.clone(), app.namespaces.current_selected);
 
     f.render_stateful_widget(list, chunks[0], &mut app.namespaces.state);
 
