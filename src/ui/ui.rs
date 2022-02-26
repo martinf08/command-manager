@@ -77,7 +77,6 @@ where
     //Display tags at right block
     let mut tags = app.tags.as_ref().borrow_mut();
     let tags_list = builder.create_list(config.name_config.tags_title, &tags);
-
     f.render_stateful_widget(tags_list, lists_block[2], &mut tags.state);
 
     if app.event_state.get_confirm() == &Confirm::Display {
