@@ -1,12 +1,9 @@
 use crate::app::app::App;
 use crate::app::event_state::{Confirm, EventState, Mode, Tab};
 use crate::app::state::State;
-use crate::app::state::StatefulList;
 use crossterm::event::{KeyCode, KeyEvent};
-use std::borrow::{Borrow, BorrowMut};
-use std::cell::RefCell;
+use std::borrow::BorrowMut;
 use std::error::Error;
-use std::rc::Rc;
 
 pub struct KeyParser;
 

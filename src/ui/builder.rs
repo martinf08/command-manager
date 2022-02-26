@@ -1,8 +1,7 @@
 use crate::app::state::StatefulList;
 use crate::core::config::Config;
-use crate::App;
-use std::cell::{Ref, RefCell, RefMut};
-use std::rc::Rc;
+
+use std::cell::RefMut;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
 use tui::widgets::{Block, Borders, List, ListItem};
@@ -32,7 +31,7 @@ impl UiBuilder {
             .block(self.get_block(title))
             .style(self.get_border_style(items.current_selected))
             .highlight_style(self.get_highlight_style())
-            .highlight_symbol(&*self.config.names_config.highlight_symbol)
+            .highlight_symbol(&*self.config.name_config.highlight_symbol)
     }
 
     pub fn get_border_style(&self, selected: bool) -> Style {
@@ -56,12 +55,7 @@ impl UiBuilder {
 }
 
 impl LayoutBuilder {
-    pub fn create(ratio_values: Vec<u16>, direction: Direction) -> Layout {
-        let constraints = ratio_values
-            .iter()
-            .map(|ratio| Constraint::Percentage(*ratio))
-            .collect::<Vec<Constraint>>();
-
+    pub fn create(constraints: Vec<Constraint>, direction: Direction) -> Layout {
         Layout::default()
             .direction(direction)
             .constraints(constraints)

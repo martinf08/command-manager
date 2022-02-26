@@ -1,15 +1,19 @@
+use std::alloc::Layout;
+use tui::layout::Constraint;
 use tui::style::{Color, Modifier};
 
 pub struct Config {
-    pub names_config: NameConfig,
+    pub name_config: NameConfig,
     pub font_config: FontConfig,
+    pub layout_config: LayoutConfig,
 }
 
 impl Config {
     pub fn new() -> Config {
         Config {
-            names_config: NameConfig::new(),
+            name_config: NameConfig::new(),
             font_config: FontConfig::new(),
+            layout_config: LayoutConfig::new(),
         }
     }
 }
@@ -56,6 +60,30 @@ impl NameConfig {
             commands_title: "Commands".to_string(),
             tags_title: "Tags".to_string(),
             highlight_symbol: "⟩".to_string(),
+        }
+    }
+}
+
+pub struct LayoutConfig {
+    pub app_block: Vec<Constraint>,
+    pub main_block: Vec<Constraint>,
+    pub lists_block: Vec<Constraint>,
+}
+
+impl LayoutConfig {
+    pub fn new() -> LayoutConfig {
+        LayoutConfig {
+            app_block: vec![Constraint::Length(3), Constraint::Min(0)],
+            main_block: vec![
+                Constraint::Percentage(50),
+                Constraint::Percentage(20),
+                Constraint::Percentage(30),
+            ],
+            lists_block: vec![
+                Constraint::Percentage(15),
+                Constraint::Percentage(75),
+                Constraint::Percentage(10),
+            ],
         }
     }
 }

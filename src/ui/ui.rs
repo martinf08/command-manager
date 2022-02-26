@@ -1,5 +1,4 @@
 use crate::app::app::App;
-use std::borrow::Borrow;
 
 use crate::app::event_state::{Confirm, Mode, Tab};
 use crate::core::config::Config;
@@ -20,7 +19,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let config = Config::new();
 
     let chunks = Layout::default()
-        .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
+        .constraints(config.layout_config.app_block)
         .split(f.size());
 
     let titles = app
@@ -59,28 +58,30 @@ where
     let config = Config::new();
     let builder = UiBuilder::new();
 
-    let full_block = LayoutBuilder::create(vec![50, 20, 30], Direction::Vertical).split(rect);
-    let middle_block =
-        LayoutBuilder::create(vec![15, 75, 10], Direction::Horizontal).split(full_block[0]);
+    let main_block =
+        LayoutBuilder::create(config.layout_config.main_block, Direction::Vertical).split(rect);
+    let lists_block =
+        LayoutBuilder::create(config.layout_config.lists_block, Direction::Horizontal)
+            .split(main_block[0]);
 
     // Display namespaces at left block
     let mut namespaces = app.namespaces.as_ref().borrow_mut();
-    let namespaces_list = builder.create_list(config.names_config.namespaces_title, &namespaces);
-    f.render_stateful_widget(namespaces_list, middle_block[0], &mut namespaces.state);
+    let namespaces_list = builder.create_list(config.name_config.namespaces_title, &namespaces);
+    f.render_stateful_widget(namespaces_list, lists_block[0], &mut namespaces.state);
 
     //Display commands at middle block
     let mut commands = app.commands.as_ref().borrow_mut();
-    let commands_list = builder.create_list(config.names_config.commands_title, &commands);
-    f.render_stateful_widget(commands_list, middle_block[1], &mut commands.state);
+    let commands_list = builder.create_list(config.name_config.commands_title, &commands);
+    f.render_stateful_widget(commands_list, lists_block[1], &mut commands.state);
 
     //Display tags at right block
     let mut tags = app.tags.as_ref().borrow_mut();
-    let tags_list = builder.create_list(config.names_config.tags_title, &tags);
+    let tags_list = builder.create_list(config.name_config.tags_title, &tags);
 
-    f.render_stateful_widget(tags_list, middle_block[2], &mut tags.state);
+    f.render_stateful_widget(tags_list, lists_block[2], &mut tags.state);
 
     if app.event_state.get_confirm() == &Confirm::Display {
-        let layout = get_popup_layout("Confirm".to_string(), f, middle_block[1], Some(3), None);
+        let layout = get_popup_layout("Confirm".to_string(), f, lists_block[1], Some(3), None);
 
         let text = vec![
             Spans::from(Span::styled(
@@ -176,7 +177,7 @@ where
                 .style(Style::default().fg(Color::White)),
         );
 
-    f.render_widget(detail_command_paragraph, full_block[1]);
+    f.render_widget(detail_command_paragraph, main_block[1]);
 }
 
 // fn display_add_input_area(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
