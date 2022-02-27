@@ -71,6 +71,10 @@ impl EventState {
         &self.confirm
     }
 
+    pub fn get_error(&self) -> &Option<String> {
+        &self.error
+    }
+
     pub fn get_tab(&self) -> &Tab {
         &self.tab
     }
@@ -93,5 +97,9 @@ impl EventState {
 
     pub fn set_tab(&mut self, tab: Tab) {
         self.tab = tab;
+    }
+
+    pub fn set_error(&mut self, error: Option<String>) {
+        self.error = error;
     }
 }
