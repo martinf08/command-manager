@@ -140,12 +140,11 @@ impl KeyParser {
                 let existing_namespace = app.db.get_namespace(&namespace)?;
 
                 if existing_namespace.is_some() {
-
-                        // let message = format!("Namespace {} already exists", s);
-                        //
-                        // app.add.error_message = Some(message);
-                        //Todo message
-                        return Ok(None);
+                    // let message = format!("Namespace {} already exists", s);
+                    //
+                    // app.add.error_message = Some(message);
+                    //Todo message
+                    return Ok(None);
                 }
 
                 app.db.add_namespace(&namespace)?;
