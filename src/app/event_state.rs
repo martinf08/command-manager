@@ -38,6 +38,7 @@ pub struct EventState {
     mode: Mode,
     sub_mode: SubMode,
     tab: Tab,
+    error: Option<String>,
 }
 
 impl Default for EventState {
@@ -48,6 +49,7 @@ impl Default for EventState {
             mode: Mode::Normal,
             sub_mode: SubMode::None,
             tab: Tab::Tab1,
+            error: None,
         }
     }
 }

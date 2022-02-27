@@ -1,5 +1,5 @@
 use crate::app::app::App;
-use crate::app::event_state::{Confirm, EventState, Mode, Tab};
+use crate::app::event_state::{Confirm, EventState, EventType, Mode, SubMode, Tab};
 use crate::app::state::{State, StatefulList};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::borrow::BorrowMut;
@@ -30,8 +30,6 @@ impl KeyParser {
             return Ok(None);
         }
 
-
-
         match app.event_state.get_tab() {
             Tab::Tab1 => KeyParser::process_tab_1(key_code, app),
             // Tab::Tab2 => KeyParser::process_tab_2(key_code, app),
@@ -43,7 +41,7 @@ impl KeyParser {
     fn process_tab_1(key_code: KeyCode, app: &mut App) -> ParserResult {
         match app.event_state.get_mode() {
             Mode::Normal => KeyParser::process_normal_mode(key_code, app),
-            // Mode::Add => KeyParser::process_add_mode(key_code, app),
+            Mode::Add => KeyParser::process_add_mode(key_code, app),
             Mode::Delete => KeyParser::process_delete_mode(key_code, app),
             _ => Ok(None), //Todo remove
         }
@@ -88,46 +86,87 @@ impl KeyParser {
             KeyCode::Enter | KeyCode::Char(' ') => KeyParser::enter(app),
             KeyCode::Esc => KeyParser::esc(app),
             // KeyCode::Char('a') => KeyParser::change_to_add_mode(app),
+            KeyCode::Char('n') => KeyParser::change_to_add_namespace_mode(app),
             KeyCode::Char('d') => KeyParser::change_to_delete_mode(app), //Todo uncomment
             _ => Ok(None),
         }
     }
 
-    // fn process_add_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
-    //     match key_code {
-    //         KeyCode::Esc => {
-    //             app.change_mode(Mode::Normal);
-    //             app.add.add_type = None;
-    //             Ok(None)
-    //         }
-    //         _ => match &app.add.add_type {
-    //             Some(_) => match app.add.input_mode {
-    //                 Some(InputMode::Namespace) => KeyParser::process_add_namespace(key_code, app),
-    //                 Some(InputMode::Command) | Some(InputMode::Tag) => {
-    //                     KeyParser::process_add_command(key_code, app)
-    //                 }
-    //                 _ => unreachable!(),
-    //             },
-    //             None => match key_code {
-    //                 KeyCode::Char('c') => {
-    //                     if app.namespaces.current_selected || app.commands.current_selected {
-    //                         app.add.add_type = Some(AddType::Command);
-    //                         app.add.input_mode = Some(InputMode::Command);
-    //                     }
-    //
-    //                     Ok(None)
-    //                 }
-    //                 KeyCode::Char('n') => {
-    //                     app.add.add_type = Some(AddType::Namespace);
-    //                     app.add.input_mode = Some(InputMode::Namespace);
-    //
-    //                     Ok(None)
-    //                 }
-    //                 _ => Ok(None),
-    //             },
-    //         },
-    //     }
-    // }
+    fn process_add_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match key_code {
+            KeyCode::Esc => {
+                app.event_state.set_confirm(Confirm::Confirmed);
+                Ok(None)
+            }
+            _ => match app.event_state.get_sub_mode() {
+                SubMode::Namespace => match app.event_state.get_confirm() {
+                    Confirm::Hide => KeyParser::process_add_namespace_mode(key_code, app),
+                    Confirm::Display => {
+                        KeyParser::process_add_namespace_mode_confirm(key_code, app)
+                    }
+                    _ => Ok(None),
+                },
+                _ => Ok(None),
+            },
+        }
+    }
+
+    fn process_add_namespace_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        KeyParser::input_handler(key_code, app, "namespace".to_string());
+
+        if key_code == KeyCode::Enter {
+            app.event_state.set_confirm(Confirm::Display);
+
+            return Ok(None);
+        }
+
+        Ok(None)
+    }
+
+    fn process_add_namespace_mode_confirm(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match key_code {
+            KeyCode::Enter => {
+                if app.inputs.is_empty() {
+                    return Ok(None);
+                }
+
+                let namespace = app
+                    .inputs
+                    .remove("namespace")
+                    .expect("namespace input is empty")
+                    .iter()
+                    .collect::<String>();
+
+                let existing_namespace = app.db.get_namespace(&namespace)?;
+
+                if existing_namespace.is_some() {
+
+                        // let message = format!("Namespace {} already exists", s);
+                        //
+                        // app.add.error_message = Some(message);
+                        //Todo message
+                        return Ok(None);
+                }
+
+                app.db.add_namespace(&namespace)?;
+
+                let namespaces = app.db.get_namespaces()?;
+
+                let mut app_namespace = app.namespaces.as_ref().borrow_mut();
+                app_namespace.items = namespaces;
+                app_namespace.state.select(Some(0));
+
+                app.cursor_position = None;
+
+                Ok(None)
+            }
+            KeyCode::Esc => {
+                app.event_state.set_confirm(Confirm::Confirmed);
+                Ok(None)
+            }
+            _ => Ok(None),
+        }
+    }
 
     fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
         let mut app_commands = app.commands.as_ref().borrow_mut();
@@ -393,11 +432,15 @@ impl KeyParser {
         Ok(None)
     }
 
-    // fn change_to_add_mode(app: &mut App) -> ParserResult {
-    //     app.event_state.set_mode(Mode::Add);
-    //     Ok(None)
-    // }
-    //
+    fn change_to_add_namespace_mode(app: &mut App) -> ParserResult {
+        app.event_state = EventState::default();
+        app.event_state.set_mode(Mode::Add);
+        app.event_state.set_sub_mode(SubMode::Namespace);
+        app.event_state.set_event_type(EventType::Namespace);
+
+        Ok(None)
+    }
+
     fn change_to_delete_mode(app: &mut App) -> ParserResult {
         let commands = app.commands.as_ref().borrow();
         let namespaces = app.namespaces.as_ref().borrow();
@@ -414,68 +457,22 @@ impl KeyParser {
         Ok(None)
     }
 
-    // fn input_handler(key_code: KeyCode, app: &mut App) -> () {
-    //     match key_code {
-    //         KeyCode::Esc => {
-    //             app.add.add_type = None;
-    //             app.change_mode(Mode::Normal);
-    //         }
-    //         KeyCode::Char(c) => {
-    //             app.add.input.push(c);
-    //             app.cursor_position.as_mut().unwrap().push_inc(c);
-    //         }
-    //         KeyCode::Backspace => {
-    //             app.add.input.pop();
-    //             app.cursor_position.as_mut().unwrap().pop_dec();
-    //         }
-    //         _ => (),
-    //     }
-    // }
-
-    // fn clear_mode(app: &mut App) -> () {
-    //     app.add.input.clear();
-    //     app.add.input_command = None;
-    //     app.add.add_type = None;
-    //     app.change_mode(Mode::Normal);
-    // }
-
-    // fn process_add_namespace(key_code: KeyCode, app: &mut App) -> ParserResult {
-    //     KeyParser::input_handler(key_code, app);
-    //
-    //     if key_code == KeyCode::Enter {
-    //         return match app.add.add_type {
-    //             Some(AddType::Namespace) => {
-    //                 if app.add.input.is_empty() {
-    //                     return Ok(None);
-    //                 }
-    //
-    //                 let existing_namespace = app.db.get_namespace(&app.add.input);
-    //
-    //                 if let Ok(option) = existing_namespace {
-    //                     if let Some(s) = option {
-    //                         let message = format!("Namespace {} already exists", s);
-    //
-    //                         app.add.error_message = Some(message);
-    //                         return Ok(None);
-    //                     }
-    //                 }
-    //
-    //                 app.db
-    //                     .add_namespace(&app.add.input)
-    //                     .expect("Failed to add namespace");
-    //                 KeyParser::clear_mode(app);
-    //
-    //                 let namespaces = app.db.get_namespaces().expect("Failed to get namespaces");
-    //                 app.namespaces = StatefulList::with_items(namespaces);
-    //                 app.cursor_position = None;
-    //
-    //                 Ok(None)
-    //             }
-    //             _ => Ok(None),
-    //         };
-    //     }
-    //     Ok(None)
-    // }
+    fn input_handler(key_code: KeyCode, app: &mut App, k: String) -> () {
+        match key_code {
+            KeyCode::Esc => {
+                app.event_state.set_confirm(Confirm::Confirmed);
+            }
+            KeyCode::Char(c) => {
+                app.inputs.entry(k).or_insert_with(Vec::new).push(c);
+                app.cursor_position.as_mut().unwrap().push_inc(c);
+            }
+            KeyCode::Backspace => {
+                app.inputs.entry(k).or_insert_with(Vec::new).pop();
+                app.cursor_position.as_mut().unwrap().pop_dec();
+            }
+            _ => (),
+        }
+    }
 
     // fn process_add_command(key_code: KeyCode, app: &mut App) -> ParserResult {
     //     KeyParser::input_handler(key_code, app);

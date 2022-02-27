@@ -5,6 +5,7 @@ use crate::core::config::Config;
 use crate::db::db::Db;
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
 
@@ -12,6 +13,7 @@ pub struct App {
     pub tabs: Rc<RefCell<TabsState>>,
     pub db: Db,
     pub event_state: EventState,
+    pub inputs: HashMap<String, Vec<char>>,
     pub namespaces: Rc<RefCell<StatefulList<String>>>,
     pub commands: Rc<RefCell<StatefulList<String>>>,
     pub tags: Rc<RefCell<StatefulList<String>>>,
@@ -33,8 +35,9 @@ impl App {
             tabs: Rc::new(RefCell::new(TabsState::new(&config))),
             db,
             event_state: EventState::default(),
-            commands: Rc::new(RefCell::new(StatefulList::with_items(commands))),
+            inputs: HashMap::new(),
             namespaces: Rc::new(RefCell::new(StatefulList::with_items(namespaces))),
+            commands: Rc::new(RefCell::new(StatefulList::with_items(commands))),
             tags: Rc::new(RefCell::new(StatefulList::with_items(tags))),
             cursor_position: None,
             quit: false,
