@@ -8,6 +8,7 @@ use crossterm::event::Event;
 use std::time::Duration;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
+use crate::app::event_state::{Confirm, EventState};
 
 pub fn run_app(
     mut terminal: &mut Terminal<CrosstermBackend<Stdout>>,
@@ -25,6 +26,11 @@ pub fn run_app(
         terminal.draw(|f| ui(f, &mut app))?;
 
         if event::poll(Duration::from_millis(100))? {
+
+            if app.event_state.get_confirm() == &Confirm::Confirmed {
+                app.event_state = EventState::default();
+            }
+
             if let Event::Key(key) = event::read()? {
                 let result = KeyParser::parse_event(key, &mut app)?;
 

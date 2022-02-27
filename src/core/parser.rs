@@ -24,16 +24,13 @@ impl KeyParser {
     fn process_key_code(key_code: KeyCode, app: &mut App) -> ParserResult {
         if key_code == KeyCode::Char('q')
             && (app.event_state.get_mode() == &Mode::Normal
-            || app.event_state.get_mode() == &Mode::Delete)
+                || app.event_state.get_mode() == &Mode::Delete)
         {
             KeyParser::quit(app)?;
             return Ok(None);
         }
 
-        if app.event_state.get_confirm() == &Confirm::Confirmed {
-            app.event_state = EventState::default();
-            return Ok(None);
-        }
+
 
         match app.event_state.get_tab() {
             Tab::Tab1 => KeyParser::process_tab_1(key_code, app),
@@ -138,11 +135,12 @@ impl KeyParser {
         let mut app_tags = app.tags.as_ref().borrow_mut();
 
         if app.event_state.get_confirm() != &Confirm::Display {
+            app.event_state.set_confirm(Confirm::Confirmed);
             return Ok(None);
         }
 
         match key_code {
-            KeyCode::Enter => {
+            KeyCode::Enter | KeyCode::Char(' ') => {
                 if app_commands.is_selected {
                     app.db.delete_command(
                         app_commands.current_item(),
@@ -403,6 +401,10 @@ impl KeyParser {
     fn change_to_delete_mode(app: &mut App) -> ParserResult {
         let commands = app.commands.as_ref().borrow();
         let namespaces = app.namespaces.as_ref().borrow();
+
+        if commands.items.is_empty() || namespaces.items.is_empty() {
+            return Ok(None);
+        }
 
         if commands.is_selected || namespaces.is_selected {
             app.event_state.set_mode(Mode::Delete);
