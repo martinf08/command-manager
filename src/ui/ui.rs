@@ -64,7 +64,7 @@ where
     f.render_stateful_widget(tags_list, lists_block[2], &mut tags.state);
 
     if app.event_state.get_confirm() == &Confirm::Display {
-        let layout = layout_builder.get_popup_layout(
+        let popup_rects = layout_builder.get_popup_rects(
             config.name_config.confirm_title,
             f,
             lists_block[1],
@@ -74,7 +74,7 @@ where
 
         let p = ui_builder.get_confirm_command(Alignment::Center);
 
-        f.render_widget(p, layout[0]);
+        f.render_widget(p, popup_rects[0]);
     }
 
     let mut command_text = "\n".to_string();

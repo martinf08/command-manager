@@ -117,7 +117,7 @@ impl LayoutBuilder {
             .constraints(constraints)
     }
 
-    pub fn get_popup_layout<B>(
+    pub fn get_popup_rects<B>(
         &self,
         title: String,
         f: &mut Frame<B>,
@@ -169,6 +169,7 @@ impl LayoutBuilder {
             .split(r);
 
         let split_x = (100 - percent_x) / 2;
+
         Layout::default()
             .direction(Direction::Horizontal)
             .constraints(
