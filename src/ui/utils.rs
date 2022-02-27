@@ -49,43 +49,6 @@ pub fn get_highlight_style() -> Style {
         .bg(Color::Gray)
 }
 
-pub fn get_popup_layout<B>(
-    title: String,
-    f: &mut Frame<B>,
-    rect: Rect,
-    margin_ratio: Option<u8>,
-    rect_dimensions: Option<(u16, u16)>,
-) -> Vec<Rect>
-where
-    B: Backend,
-{
-    let block = Block::default()
-        .title(title)
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White));
-
-    let area = if let Some((percent_x, percent_y)) = rect_dimensions {
-        centered_rect(percent_x, percent_y, rect)
-    } else {
-        centered_rect(70, 20, rect)
-    };
-
-    f.render_widget(Clear, area);
-    f.render_widget(block, area);
-
-    let layout = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(100)].as_ref());
-
-    if margin_ratio.is_some() {
-        let layout = layout.margin(area.height / margin_ratio.unwrap() as u16);
-
-        return layout.split(area);
-    }
-
-    layout.split(area)
-}
-
 pub fn set_cursor_position(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect, input: String) {
     if app.cursor_position.is_none() {
         app.cursor_position = Some(CursorPosition::new(

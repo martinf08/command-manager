@@ -6,6 +6,7 @@ pub struct Config {
     pub name_config: NameConfig,
     pub font_config: FontConfig,
     pub layout_config: LayoutConfig,
+    pub text_config: TextConfig,
 }
 
 impl Config {
@@ -14,6 +15,7 @@ impl Config {
             name_config: NameConfig::new(),
             font_config: FontConfig::new(),
             layout_config: LayoutConfig::new(),
+            text_config: TextConfig::new(),
         }
     }
 }
@@ -24,6 +26,7 @@ pub struct FontConfig {
     pub highlight_fg: Color,
     pub highlight_bg: Color,
     pub highlight_modifier: Modifier,
+    pub text_fg: Color,
 }
 
 impl FontConfig {
@@ -34,6 +37,7 @@ impl FontConfig {
             highlight_fg: Color::Red,
             highlight_bg: Color::Gray,
             highlight_modifier: Modifier::BOLD,
+            text_fg: Color::White,
         }
     }
 }
@@ -45,6 +49,7 @@ pub struct NameConfig {
     pub commands_title: String,
     pub tags_title: String,
     pub highlight_symbol: String,
+    pub confirm_title: String,
 }
 
 impl NameConfig {
@@ -60,6 +65,7 @@ impl NameConfig {
             commands_title: "Commands".to_string(),
             tags_title: "Tags".to_string(),
             highlight_symbol: "⟩".to_string(),
+            confirm_title: "Confirm".to_string(),
         }
     }
 }
@@ -84,6 +90,20 @@ impl LayoutConfig {
                 Constraint::Percentage(75),
                 Constraint::Percentage(10),
             ],
+        }
+    }
+}
+
+pub struct TextConfig {
+    pub confirm_command: String,
+    pub confirm_command_answer: String,
+}
+
+impl TextConfig {
+    pub fn new() -> TextConfig {
+        TextConfig {
+            confirm_command: "Execute the selected command ? (press Esc to cancel)".to_string(),
+            confirm_command_answer: "Press Enter".to_string(),
         }
     }
 }

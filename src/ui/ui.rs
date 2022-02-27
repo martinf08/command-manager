@@ -4,7 +4,7 @@ use crate::app::event_state::{Confirm, Mode, Tab};
 use crate::core::config::Config;
 use crate::ui::builder::{LayoutBuilder, UiBuilder};
 use crate::ui::utils::{
-    get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
+    get_border_style_from_selected_status, get_highlight_style,
     set_cursor_position,
 };
 use crate::widget::button::Button;
@@ -56,48 +56,34 @@ where
     B: Backend,
 {
     let config = Config::new();
-    let builder = UiBuilder::new();
+    let ui_builder = UiBuilder::new();
+    let layout_builder = LayoutBuilder::new();
 
     let main_block =
-        LayoutBuilder::create(config.layout_config.main_block, Direction::Vertical).split(rect);
+        layout_builder.create(config.layout_config.main_block, Direction::Vertical).split(rect);
     let lists_block =
-        LayoutBuilder::create(config.layout_config.lists_block, Direction::Horizontal)
+        layout_builder.create(config.layout_config.lists_block, Direction::Horizontal)
             .split(main_block[0]);
 
     // Display namespaces at left block
     let mut namespaces = app.namespaces.as_ref().borrow_mut();
-    let namespaces_list = builder.create_list(config.name_config.namespaces_title, &namespaces);
+    let namespaces_list = ui_builder.create_list(config.name_config.namespaces_title, &namespaces);
     f.render_stateful_widget(namespaces_list, lists_block[0], &mut namespaces.state);
 
     //Display commands at middle block
     let mut commands = app.commands.as_ref().borrow_mut();
-    let commands_list = builder.create_list(config.name_config.commands_title, &commands);
+    let commands_list = ui_builder.create_list(config.name_config.commands_title, &commands);
     f.render_stateful_widget(commands_list, lists_block[1], &mut commands.state);
 
     //Display tags at right block
     let mut tags = app.tags.as_ref().borrow_mut();
-    let tags_list = builder.create_list(config.name_config.tags_title, &tags);
+    let tags_list = ui_builder.create_list(config.name_config.tags_title, &tags);
     f.render_stateful_widget(tags_list, lists_block[2], &mut tags.state);
 
     if app.event_state.get_confirm() == &Confirm::Display {
-        let layout = get_popup_layout("Confirm".to_string(), f, lists_block[1], Some(3), None);
+        let layout = layout_builder.get_popup_layout(config.name_config.confirm_title, f, lists_block[1], Some(3), None);
 
-        let text = vec![
-            Spans::from(Span::styled(
-                "Execute command ?", //Todo config
-                Style::default().fg(Color::White),
-            )),
-            Spans::from(Span::raw("")),
-            Spans::from(Span::styled(
-                "Yes", //Todo config
-                Style::default()
-                    .add_modifier(Modifier::BOLD)
-                    .fg(Color::Red)
-                    .bg(Color::Gray),
-            )),
-        ];
-
-        let p = Paragraph::new(text).alignment(Alignment::Center);
+        let p = ui_builder.get_confirm_command(Alignment::Center);
 
         f.render_widget(p, layout[0]);
     }
@@ -206,25 +192,25 @@ where
 //     f.render_widget(p, chunks[0]);
 // }
 
-fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
-    let rects = get_popup_layout("Element to add".to_string(), f, rect, Some(3), None);
-
-    let layout = Layout::default()
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .direction(Direction::Horizontal)
-        .split(rects[0]);
-
-    let command = Button::new("Command")
-        .style(Style::default().fg(Color::Red))
-        .alignment(Alignment::Center);
-
-    let namespace = Button::new("Namespace")
-        .style(Style::default().fg(Color::White))
-        .alignment(Alignment::Center);
-
-    f.render_widget(command, layout[0]);
-    f.render_widget(namespace, layout[1]);
-}
+// fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
+//     let rects = get_popup_layout("Element to add".to_string(), f, rect, Some(3), None);
+//
+//     let layout = Layout::default()
+//         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+//         .direction(Direction::Horizontal)
+//         .split(rects[0]);
+//
+//     let command = Button::new("Command")
+//         .style(Style::default().fg(Color::Red))
+//         .alignment(Alignment::Center);
+//
+//     let namespace = Button::new("Namespace")
+//         .style(Style::default().fg(Color::White))
+//         .alignment(Alignment::Center);
+//
+//     f.render_widget(command, layout[0]);
+//     f.render_widget(namespace, layout[1]);
+// }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
 where
