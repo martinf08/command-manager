@@ -18,6 +18,7 @@ pub struct App {
     pub commands: Rc<RefCell<StatefulList<String>>>,
     pub tags: Rc<RefCell<StatefulList<String>>>,
     pub cursor_position: Option<CursorPosition>,
+    pub error: Option<String>,
     pub quit: bool,
 }
 
@@ -40,6 +41,7 @@ impl App {
             commands: Rc::new(RefCell::new(StatefulList::with_items(commands))),
             tags: Rc::new(RefCell::new(StatefulList::with_items(tags))),
             cursor_position: None,
+            error: None,
             quit: false,
         })
     }

@@ -38,7 +38,6 @@ pub struct EventState {
     mode: Mode,
     sub_mode: SubMode,
     tab: Tab,
-    error: Option<String>,
 }
 
 impl Default for EventState {
@@ -49,7 +48,6 @@ impl Default for EventState {
             mode: Mode::Normal,
             sub_mode: SubMode::None,
             tab: Tab::Tab1,
-            error: None,
         }
     }
 }
@@ -69,10 +67,6 @@ impl EventState {
 
     pub fn get_confirm(&self) -> &Confirm {
         &self.confirm
-    }
-
-    pub fn get_error(&self) -> &Option<String> {
-        &self.error
     }
 
     pub fn get_tab(&self) -> &Tab {
@@ -97,9 +91,5 @@ impl EventState {
 
     pub fn set_tab(&mut self, tab: Tab) {
         self.tab = tab;
-    }
-
-    pub fn set_error(&mut self, error: Option<String>) {
-        self.error = error;
     }
 }
