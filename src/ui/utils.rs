@@ -1,8 +1,8 @@
-use tui::backend::Backend;
-use tui::Frame;
-use tui::layout::Rect;
-use crate::App;
 use crate::app::input::CursorPosition;
+use crate::App;
+use tui::backend::Backend;
+use tui::layout::Rect;
+use tui::Frame;
 
 pub fn set_cursor_position(app: &mut App, f: &mut Frame<impl Backend>, rect: Rect, input: String) {
     if app.cursor_position.is_none() {

@@ -4,11 +4,11 @@ use crate::core::config::Config;
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 use tui::backend::Backend;
-use tui::Frame;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
+use tui::Frame;
 
 pub struct UiBuilder {
     config: Config,
@@ -49,8 +49,14 @@ impl UiBuilder {
             .map(|t| {
                 let (first, rest) = t.split_at(1);
                 Spans::from(vec![
-                    Span::styled(first.to_string(), Style::default().fg(self.config.font_config.first_letter_fg)),
-                    Span::styled(rest.to_string(), Style::default().fg(self.config.font_config.text_fg)),
+                    Span::styled(
+                        first.to_string(),
+                        Style::default().fg(self.config.font_config.first_letter_fg),
+                    ),
+                    Span::styled(
+                        rest.to_string(),
+                        Style::default().fg(self.config.font_config.text_fg),
+                    ),
                 ])
             })
             .collect::<Vec<Spans>>();
@@ -82,7 +88,6 @@ impl UiBuilder {
     }
 
     pub fn get_confirm_command(&self, alignment: Alignment) -> Paragraph {
-
         let text = vec![
             Spans::from(Span::styled(
                 self.config.text_config.confirm_command.clone(),
@@ -91,7 +96,7 @@ impl UiBuilder {
             Spans::from(Span::raw("")),
             Spans::from(Span::styled(
                 self.config.text_config.confirm_command_answer.clone(),
-                self.get_highlight_style()
+                self.get_highlight_style(),
             )),
         ];
 
@@ -120,12 +125,13 @@ impl LayoutBuilder {
         margin_ratio: Option<u8>,
         rect_dimensions: Option<(u16, u16)>,
     ) -> Vec<Rect>
-        where
-            B: Backend,
+    where
+        B: Backend,
     {
         let ui_builder = UiBuilder::new();
 
-        let block = ui_builder.get_block(title)
+        let block = ui_builder
+            .get_block(title)
             .style(ui_builder.get_border_style(true));
 
         let area = if let Some((percent_x, percent_y)) = rect_dimensions {
@@ -158,7 +164,7 @@ impl LayoutBuilder {
                     Constraint::Percentage(percent_y),
                     Constraint::Percentage(split_y),
                 ]
-                    .as_ref(),
+                .as_ref(),
             )
             .split(r);
 
@@ -171,7 +177,7 @@ impl LayoutBuilder {
                     Constraint::Percentage(percent_x),
                     Constraint::Percentage(split_x),
                 ]
-                    .as_ref(),
+                .as_ref(),
             )
             .split(popup_layout[1])[1]
     }

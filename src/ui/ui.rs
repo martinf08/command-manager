@@ -18,7 +18,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let ui_builder = UiBuilder::new();
     let layout_builder = LayoutBuilder::new();
 
-    let chunks = layout_builder.create(config.layout_config.app_block, Direction::Vertical)
+    let chunks = layout_builder
+        .create(config.layout_config.app_block, Direction::Vertical)
         .split(f.size());
 
     // Display tabs
@@ -40,11 +41,12 @@ where
     let ui_builder = UiBuilder::new();
     let layout_builder = LayoutBuilder::new();
 
-    let main_block =
-        layout_builder.create(config.layout_config.main_block, Direction::Vertical).split(rect);
-    let lists_block =
-        layout_builder.create(config.layout_config.lists_block, Direction::Horizontal)
-            .split(main_block[0]);
+    let main_block = layout_builder
+        .create(config.layout_config.main_block, Direction::Vertical)
+        .split(rect);
+    let lists_block = layout_builder
+        .create(config.layout_config.lists_block, Direction::Horizontal)
+        .split(main_block[0]);
 
     // Display namespaces at left block
     let mut namespaces = app.namespaces.as_ref().borrow_mut();
@@ -62,7 +64,13 @@ where
     f.render_stateful_widget(tags_list, lists_block[2], &mut tags.state);
 
     if app.event_state.get_confirm() == &Confirm::Display {
-        let layout = layout_builder.get_popup_layout(config.name_config.confirm_title, f, lists_block[1], Some(3), None);
+        let layout = layout_builder.get_popup_layout(
+            config.name_config.confirm_title,
+            f,
+            lists_block[1],
+            Some(3),
+            None,
+        );
 
         let p = ui_builder.get_confirm_command(Alignment::Center);
 
