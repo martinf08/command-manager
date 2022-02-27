@@ -51,13 +51,14 @@ impl KeyParser {
     }
 
     fn process_tab_2(key_code: KeyCode, app: &mut App) -> ParserResult {
+        let mut tabs = app.tabs.as_ref().borrow_mut();
         match key_code {
             KeyCode::Right | KeyCode::Char('l') => {
-                app.tabs.next();
+                tabs.next();
                 Ok(None)
             }
             KeyCode::Left | KeyCode::Char('h') => {
-                app.tabs.previous();
+                tabs.previous();
                 Ok(None)
             }
             _ => Ok(None),
@@ -65,13 +66,14 @@ impl KeyParser {
     }
 
     fn process_tab_3(key_code: KeyCode, app: &mut App) -> ParserResult {
+        let mut tabs = app.tabs.as_ref().borrow_mut();
         match key_code {
             KeyCode::Right | KeyCode::Char('l') => {
-                app.tabs.next();
+                tabs.next();
                 Ok(None)
             }
             KeyCode::Left | KeyCode::Char('h') => {
-                app.tabs.previous();
+                tabs.previous();
                 Ok(None)
             }
             _ => Ok(None),
@@ -178,6 +180,7 @@ impl KeyParser {
     // }
 
     fn move_right(app: &mut App) -> ParserResult {
+        let mut tabs = app.tabs.as_ref().borrow_mut();
         let mut namespaces = app.namespaces.as_ref().borrow_mut();
         let mut commands = app.commands.as_ref().borrow_mut();
         let mut tags = app.tags.as_ref().borrow_mut();
@@ -192,13 +195,14 @@ impl KeyParser {
                 commands.state.select(Some(0));
                 tags.state.select(Some(0));
             }
-            None => app.tabs.next(),
+            None => tabs.next(),
         }
 
         Ok(None)
     }
 
     fn move_left(app: &mut App) -> ParserResult {
+        let mut tabs = app.tabs.as_ref().borrow_mut();
         let mut namespaces = app.namespaces.as_ref().borrow_mut();
         let mut commands = app.commands.as_ref().borrow_mut();
         let mut tags = app.tags.as_ref().borrow_mut();
@@ -223,15 +227,16 @@ impl KeyParser {
                     commands.unselect();
                     tags.unselect();
 
-                    app.tabs.current_selected = true;
+                    tabs.current_selected = true;
                 }
-                None => app.tabs.previous(),
+                None => tabs.previous(),
             },
         }
         Ok(None)
     }
 
     fn move_down(app: &mut App) -> ParserResult {
+        let mut tabs = app.tabs.as_ref().borrow_mut();
         let mut namespaces = app.namespaces.as_ref().borrow_mut();
         let mut commands = app.commands.as_ref().borrow_mut();
         let mut tags = app.tags.as_ref().borrow_mut();
@@ -259,7 +264,7 @@ impl KeyParser {
                     tags.items = new_tags;
                 }
                 None => {
-                    app.tabs.current_selected = false;
+                    tabs.current_selected = false;
 
                     namespaces.current_selected = true;
                     namespaces.state.select(Some(0));
@@ -347,6 +352,7 @@ impl KeyParser {
     fn esc(app: &mut App) -> ParserResult {
         app.event_state.set_mode(Mode::Normal);
 
+        let mut tabs = app.tabs.as_ref().borrow_mut();
         let mut namespaces = app.namespaces.as_ref().borrow_mut();
         let mut commands = app.commands.as_ref().borrow_mut();
         let mut tags = app.tags.as_ref().borrow_mut();
@@ -365,7 +371,7 @@ impl KeyParser {
                 namespaces.current_selected = false;
                 namespaces.unselect();
 
-                app.tabs.current_selected = true;
+                tabs.current_selected = true;
             }
             _ => {}
         }

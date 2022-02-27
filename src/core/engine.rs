@@ -13,7 +13,9 @@ pub fn run_app(
     mut terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     mut app: App,
 ) -> ParserResult {
-    app.tabs.current_selected = true;
+    let mut tabs = app.tabs.as_ref().borrow_mut();
+    tabs.current_selected = true;
+    drop(tabs);
 
     loop {
         if app.quit {

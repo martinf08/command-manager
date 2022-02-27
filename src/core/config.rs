@@ -27,6 +27,7 @@ pub struct FontConfig {
     pub highlight_bg: Color,
     pub highlight_modifier: Modifier,
     pub text_fg: Color,
+    pub first_letter_fg: Color,
 }
 
 impl FontConfig {
@@ -38,6 +39,7 @@ impl FontConfig {
             highlight_bg: Color::Gray,
             highlight_modifier: Modifier::BOLD,
             text_fg: Color::White,
+            first_letter_fg: Color::Red,
         }
     }
 }

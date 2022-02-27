@@ -9,7 +9,7 @@ use std::error::Error;
 use std::rc::Rc;
 
 pub struct App {
-    pub tabs: TabsState,
+    pub tabs: Rc<RefCell<TabsState>>,
     pub db: Db,
     pub event_state: EventState,
     pub namespaces: Rc<RefCell<StatefulList<String>>>,
@@ -30,7 +30,7 @@ impl App {
         let (commands, tags) = db.get_commands_and_tags(None)?;
 
         Ok(App {
-            tabs: TabsState::new(&config),
+            tabs: Rc::new(RefCell::new(TabsState::new(&config))),
             db,
             event_state: EventState::default(),
             commands: Rc::new(RefCell::new(StatefulList::with_items(commands))),

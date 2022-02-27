@@ -17,33 +17,16 @@ use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let config = Config::new();
+    let ui_builder = UiBuilder::new();
+    let layout_builder = LayoutBuilder::new();
 
-    let chunks = Layout::default()
-        .constraints(config.layout_config.app_block)
+    let chunks = layout_builder.create(config.layout_config.app_block, Direction::Vertical)
         .split(f.size());
 
-    let titles = app
-        .tabs
-        .titles
-        .iter()
-        .map(|t| {
-            let (first, rest) = t.split_at(1);
-            Spans::from(vec![
-                Span::styled(first, Style::default().fg(Color::Red)),
-                Span::styled(rest, Style::default().fg(Color::White)),
-            ])
-        })
-        .collect::<Vec<Spans>>();
-
-    let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL))
-        .select(app.tabs.index)
-        .style(get_border_style_from_selected_status(
-            app.tabs.current_selected,
-        ))
-        .highlight_style(get_highlight_style());
-
+    // Display tabs
+    let tabs = ui_builder.create_tabs(&app.tabs);
     f.render_widget(tabs, chunks[0]);
+
     match app.event_state.get_tab() {
         Tab::Tab1 => draw_first_tab(f, chunks[1], app),
         Tab::Tab2 => draw_second_tab(f, chunks[1], app),

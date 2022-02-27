@@ -1,13 +1,14 @@
-use crate::app::state::StatefulList;
+use crate::app::state::{StatefulList, TabsState};
 use crate::core::config::Config;
 
-use std::cell::RefMut;
+use std::cell::{Ref, RefCell, RefMut};
+use std::rc::Rc;
 use tui::backend::Backend;
 use tui::Frame;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
 use crate::ui::utils::{centered_rect, get_border_style_from_selected_status, get_highlight_style};
 
 pub struct UiBuilder {
@@ -38,6 +39,28 @@ impl UiBuilder {
             .style(self.get_border_style(items.current_selected))
             .highlight_style(self.get_highlight_style())
             .highlight_symbol(&*self.config.name_config.highlight_symbol)
+    }
+
+    pub fn create_tabs(&self, items: &Rc<RefCell<TabsState>>) -> Tabs {
+        let tabs_ref = items.as_ref().borrow();
+
+        let titles = tabs_ref
+            .titles
+            .iter()
+            .map(|t| {
+                let (first, rest) = t.split_at(1);
+                Spans::from(vec![
+                    Span::styled(first.to_string(), Style::default().fg(self.config.font_config.first_letter_fg)),
+                    Span::styled(rest.to_string(), Style::default().fg(self.config.font_config.text_fg)),
+                ])
+            })
+            .collect::<Vec<Spans>>();
+
+        Tabs::new(titles)
+            .block(self.get_block("".to_string()))
+            .style(self.get_border_style(tabs_ref.current_selected))
+            .highlight_style(self.get_highlight_style())
+            .select(tabs_ref.index)
     }
 
     pub fn get_border_style(&self, selected: bool) -> Style {
