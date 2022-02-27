@@ -9,7 +9,6 @@ use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
-use crate::ui::utils::{centered_rect, get_border_style_from_selected_status, get_highlight_style};
 
 pub struct UiBuilder {
     config: Config,
@@ -127,12 +126,12 @@ impl LayoutBuilder {
         let ui_builder = UiBuilder::new();
 
         let block = ui_builder.get_block(title)
-            .style(get_border_style_from_selected_status(true));
+            .style(ui_builder.get_border_style(true));
 
         let area = if let Some((percent_x, percent_y)) = rect_dimensions {
-            centered_rect(percent_x, percent_y, rect)
+            self.get_centered_rect(percent_x, percent_y, rect)
         } else {
-            centered_rect(70, 20, rect)
+            self.get_centered_rect(70, 20, rect)
         };
 
         f.render_widget(Clear, area);
@@ -147,5 +146,33 @@ impl LayoutBuilder {
         }
 
         layout.split(area)
+    }
+
+    pub fn get_centered_rect(&self, percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+        let split_y = (100 - percent_y) / 2;
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                    Constraint::Percentage(split_y),
+                    Constraint::Percentage(percent_y),
+                    Constraint::Percentage(split_y),
+                ]
+                    .as_ref(),
+            )
+            .split(r);
+
+        let split_x = (100 - percent_x) / 2;
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Percentage(split_x),
+                    Constraint::Percentage(percent_x),
+                    Constraint::Percentage(split_x),
+                ]
+                    .as_ref(),
+            )
+            .split(popup_layout[1])[1]
     }
 }

@@ -3,10 +3,8 @@ use crate::app::app::App;
 use crate::app::event_state::{Confirm, Mode, Tab};
 use crate::core::config::Config;
 use crate::ui::builder::{LayoutBuilder, UiBuilder};
-use crate::ui::utils::{
-    get_border_style_from_selected_status, get_highlight_style,
-    set_cursor_position,
-};
+use crate::ui::utils::set_cursor_position;
+
 use crate::widget::button::Button;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
