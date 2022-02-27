@@ -35,7 +35,7 @@ impl UiBuilder {
 
         List::new(list_item)
             .block(self.get_block(title))
-            .style(self.get_border_style(items.current_selected))
+            .style(self.get_border_style(items.is_selected))
             .highlight_style(self.get_highlight_style())
             .highlight_symbol(&*self.config.name_config.highlight_symbol)
     }
@@ -63,7 +63,7 @@ impl UiBuilder {
 
         Tabs::new(titles)
             .block(self.get_block("".to_string()))
-            .style(self.get_border_style(tabs_ref.current_selected))
+            .style(self.get_border_style(tabs_ref.is_selected))
             .highlight_style(self.get_highlight_style())
             .select(tabs_ref.index)
     }

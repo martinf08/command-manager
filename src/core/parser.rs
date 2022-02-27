@@ -1,9 +1,11 @@
 use crate::app::app::App;
 use crate::app::event_state::{Confirm, EventState, Mode, Tab};
-use crate::app::state::State;
+use crate::app::state::{State, StatefulList};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::borrow::BorrowMut;
+use std::cell::RefCell;
 use std::error::Error;
+use std::rc::Rc;
 
 pub struct KeyParser;
 
@@ -22,7 +24,7 @@ impl KeyParser {
     fn process_key_code(key_code: KeyCode, app: &mut App) -> ParserResult {
         if key_code == KeyCode::Char('q')
             && (app.event_state.get_mode() == &Mode::Normal
-                || app.event_state.get_mode() == &Mode::Delete)
+            || app.event_state.get_mode() == &Mode::Delete)
         {
             KeyParser::quit(app)?;
             return Ok(None);
@@ -45,7 +47,7 @@ impl KeyParser {
         match app.event_state.get_mode() {
             Mode::Normal => KeyParser::process_normal_mode(key_code, app),
             // Mode::Add => KeyParser::process_add_mode(key_code, app),
-            // Mode::Delete => KeyParser::process_delete_mode(key_code, app),
+            Mode::Delete => KeyParser::process_delete_mode(key_code, app),
             _ => Ok(None), //Todo remove
         }
     }
@@ -86,10 +88,10 @@ impl KeyParser {
             KeyCode::Left | KeyCode::Char('h') => KeyParser::move_left(app),
             KeyCode::Down | KeyCode::Char('j') => KeyParser::move_down(app),
             KeyCode::Up | KeyCode::Char('k') => KeyParser::move_up(app),
-            KeyCode::Enter => KeyParser::enter(app),
+            KeyCode::Enter | KeyCode::Char(' ') => KeyParser::enter(app),
             KeyCode::Esc => KeyParser::esc(app),
             // KeyCode::Char('a') => KeyParser::change_to_add_mode(app),
-            // KeyCode::Char('d') => KeyParser::change_to_delete_mode(app), //Todo uncomment
+            KeyCode::Char('d') => KeyParser::change_to_delete_mode(app), //Todo uncomment
             _ => Ok(None),
         }
     }
@@ -129,55 +131,69 @@ impl KeyParser {
     //         },
     //     }
     // }
-    //
-    // fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
-    //     if app.show_delete_confirmation {
-    //         match key_code {
-    //             KeyCode::Enter => {
-    //                 if app.commands.current_selected {
-    //                     app.db.delete_command(
-    //                         app.commands.current_item(),
-    //                         app.namespaces.current_item(),
-    //                     )?;
-    //
-    //                     let (commands, tags) = app
-    //                         .db
-    //                         .get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
-    //
-    //                     app.commands = StatefulList::with_items(commands);
-    //                     app.tags = StatefulList::with_items(tags);
-    //                 } else if app.namespaces.current_selected {
-    //                     app.db.delete_namespace(app.namespaces.current_item())?;
-    //
-    //                     let namespaces = app.db.get_namespaces().expect("Failed to get namespaces");
-    //                     app.namespaces = StatefulList::with_items(namespaces);
-    //
-    //                     let (commands, tags) = app
-    //                         .db
-    //                         .get_commands_and_tags(Some(app.namespaces.current_item().clone()))?;
-    //                     app.commands = StatefulList::with_items(commands);
-    //                     app.tags = StatefulList::with_items(tags);
-    //                 } else {
-    //                     return Ok(None);
-    //                 }
-    //
-    //                 app.show_delete_confirmation = false;
-    //                 app.change_mode(Mode::Normal);
-    //
-    //                 return Ok(None);
-    //             }
-    //             KeyCode::Esc => {
-    //                 app.show_delete_confirmation = false;
-    //                 app.change_mode(Mode::Normal);
-    //
-    //                 return Ok(None);
-    //             }
-    //             _ => {}
-    //         }
-    //     }
-    //
-    //     Ok(None)
-    // }
+
+    fn process_delete_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
+        let mut app_commands = app.commands.as_ref().borrow_mut();
+        let mut app_namespaces = app.namespaces.as_ref().borrow_mut();
+        let mut app_tags = app.tags.as_ref().borrow_mut();
+
+        if app.event_state.get_confirm() != &Confirm::Display {
+            return Ok(None);
+        }
+
+        match key_code {
+            KeyCode::Enter => {
+                if app_commands.is_selected {
+                    app.db.delete_command(
+                        app_commands.current_item(),
+                        app_namespaces.current_item(),
+                    )?;
+
+                    let (commands, tags) = app
+                        .db
+                        .get_commands_and_tags(Some(app_namespaces.current_item().clone()))?;
+
+                    app_commands.items = commands;
+                    app_commands.state.select(Some(0));
+
+                    app_tags.items = tags;
+                    app_tags.state.select(Some(0));
+                } else if app_namespaces.is_selected {
+                    app.db.delete_namespace(app_namespaces.current_item())?;
+
+                    let namespaces = app.db.get_namespaces()?;
+                    app_namespaces.items = namespaces;
+                    app_namespaces.state.select(Some(0));
+
+                    let (commands, tags) = app
+                        .db
+                        .get_commands_and_tags(Some(app_namespaces.current_item().clone()))?;
+
+                    app_commands.items = commands;
+                    app_commands.state.select(Some(0));
+
+                    app_tags.items = tags;
+                    app_tags.state.select(Some(0));
+                } else {
+                    return Ok(None);
+                }
+
+                app.event_state.set_confirm(Confirm::Confirmed);
+                app.event_state.set_mode(Mode::Normal);
+
+                return Ok(None);
+            }
+            KeyCode::Esc => {
+                app.event_state.set_confirm(Confirm::Confirmed);
+                app.event_state.set_mode(Mode::Normal);
+
+                return Ok(None);
+            }
+            _ => {}
+        }
+
+        Ok(None)
+    }
 
     fn move_right(app: &mut App) -> ParserResult {
         let mut tabs = app.tabs.as_ref().borrow_mut();
@@ -187,10 +203,10 @@ impl KeyParser {
 
         match namespaces.state.selected() {
             Some(_) => {
-                namespaces.current_selected = false;
+                namespaces.is_selected = false;
 
-                commands.current_selected = true;
-                tags.current_selected = true;
+                commands.is_selected = true;
+                tags.is_selected = true;
 
                 commands.state.select(Some(0));
                 tags.state.select(Some(0));
@@ -209,25 +225,25 @@ impl KeyParser {
 
         match commands.state.selected() {
             Some(_) => {
-                namespaces.current_selected = true;
+                namespaces.is_selected = true;
 
-                commands.current_selected = false;
-                tags.current_selected = false;
+                commands.is_selected = false;
+                tags.is_selected = false;
 
                 commands.unselect();
                 tags.unselect();
             }
             None => match namespaces.state.selected() {
                 Some(_) => {
-                    namespaces.current_selected = false;
-                    commands.current_selected = false;
-                    tags.current_selected = false;
+                    namespaces.is_selected = false;
+                    commands.is_selected = false;
+                    tags.is_selected = false;
 
                     namespaces.unselect();
                     commands.unselect();
                     tags.unselect();
 
-                    tabs.current_selected = true;
+                    tabs.is_selected = true;
                 }
                 None => tabs.previous(),
             },
@@ -264,9 +280,9 @@ impl KeyParser {
                     tags.items = new_tags;
                 }
                 None => {
-                    tabs.current_selected = false;
+                    tabs.is_selected = false;
 
-                    namespaces.current_selected = true;
+                    namespaces.is_selected = true;
                     namespaces.state.select(Some(0));
 
                     let index = namespaces.current();
@@ -325,8 +341,8 @@ impl KeyParser {
                     )));
                 }
                 Confirm::Hide => {
-                    commands.current_selected = false;
-                    tags.current_selected = false;
+                    commands.is_selected = false;
+                    tags.is_selected = false;
 
                     app.event_state.set_confirm(Confirm::Display);
                 }
@@ -334,10 +350,10 @@ impl KeyParser {
             },
             None => match namespaces.state.selected() {
                 Some(_) => {
-                    namespaces.current_selected = false;
+                    namespaces.is_selected = false;
 
-                    commands.current_selected = true;
-                    tags.current_selected = true;
+                    commands.is_selected = true;
+                    tags.is_selected = true;
 
                     commands.state.select(Some(0));
                     tags.state.select(Some(0));
@@ -359,19 +375,19 @@ impl KeyParser {
 
         match app.event_state.get_confirm() {
             Confirm::Display => {
-                commands.current_selected = true;
-                tags.current_selected = true;
+                commands.is_selected = true;
+                tags.is_selected = true;
 
                 app.event_state.set_confirm(Confirm::Hide);
             }
             Confirm::Hide => {
-                commands.current_selected = false;
-                tags.current_selected = false;
+                commands.is_selected = false;
+                tags.is_selected = false;
 
-                namespaces.current_selected = false;
+                namespaces.is_selected = false;
                 namespaces.unselect();
 
-                tabs.current_selected = true;
+                tabs.is_selected = true;
             }
             _ => {}
         }
@@ -384,14 +400,17 @@ impl KeyParser {
     //     Ok(None)
     // }
     //
-    // fn change_to_delete_mode(app: &mut App) -> ParserResult {
-    //     if app.commands.current_selected || app.namespaces.current_selected {
-    //         app.event_state.set_mode(Mode::Delete);
-    //         app.event_state.set_confirm(Confirm::Display);
-    //     }
-    //
-    //     Ok(None)
-    // }
+    fn change_to_delete_mode(app: &mut App) -> ParserResult {
+        let commands = app.commands.as_ref().borrow();
+        let namespaces = app.namespaces.as_ref().borrow();
+
+        if commands.is_selected || namespaces.is_selected {
+            app.event_state.set_mode(Mode::Delete);
+            app.event_state.set_confirm(Confirm::Display);
+        }
+
+        Ok(None)
+    }
 
     // fn input_handler(key_code: KeyCode, app: &mut App) -> () {
     //     match key_code {

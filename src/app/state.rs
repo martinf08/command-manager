@@ -9,7 +9,7 @@ pub trait State {
 pub struct TabsState {
     pub titles: Vec<String>,
     pub index: usize,
-    pub current_selected: bool,
+    pub is_selected: bool,
 }
 
 impl State for TabsState {
@@ -34,7 +34,7 @@ impl TabsState {
         TabsState {
             titles,
             index: 0,
-            current_selected: false,
+            is_selected: false,
         }
     }
 }
@@ -42,7 +42,7 @@ impl TabsState {
 pub struct StatefulList<T> {
     pub state: ListState,
     pub items: Vec<T>,
-    pub current_selected: bool,
+    pub is_selected: bool,
 }
 
 fn get_next_state_to_select(state: &ListState, item_count: usize) -> Option<usize> {
@@ -88,7 +88,7 @@ impl<T> StatefulList<T> {
         StatefulList {
             state: ListState::default(),
             items,
-            current_selected: false,
+            is_selected: false,
         }
     }
 

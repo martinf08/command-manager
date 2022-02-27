@@ -14,7 +14,7 @@ pub fn run_app(
     mut app: App,
 ) -> ParserResult {
     let mut tabs = app.tabs.as_ref().borrow_mut();
-    tabs.current_selected = true;
+    tabs.is_selected = true;
     drop(tabs);
 
     loop {
