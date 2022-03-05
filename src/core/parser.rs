@@ -100,7 +100,7 @@ impl KeyParser {
                     Confirm::Hide => {
                         KeyParser::input_handler(key_code, app, "namespace".to_string());
                         Ok(None)
-                    },
+                    }
                     Confirm::Display => {
                         KeyParser::process_add_namespace_mode_confirm(key_code, app)
                     }
@@ -148,6 +148,7 @@ impl KeyParser {
                 app_namespace.state.select(Some(0));
 
                 app.cursor_position = None;
+                app.event_state.set_confirm(Confirm::Confirmed);
 
                 Ok(None)
             }
@@ -357,6 +358,11 @@ impl KeyParser {
         match commands.state.selected() {
             Some(_) => match app.event_state.get_confirm() {
                 Confirm::Display => {
+                    if commands.items.is_empty() {
+                        app.event_state.set_confirm(Confirm::Confirmed);
+                        return Ok(None);
+                    }
+
                     app.event_state.set_confirm(Confirm::Confirmed);
 
                     return Ok(Some((
@@ -432,10 +438,6 @@ impl KeyParser {
         let commands = app.commands.as_ref().borrow();
         let namespaces = app.namespaces.as_ref().borrow();
 
-        if commands.items.is_empty() || namespaces.items.is_empty() {
-            return Ok(None);
-        }
-
         if commands.is_selected || namespaces.is_selected {
             app.event_state.set_mode(Mode::Delete);
             app.event_state.set_confirm(Confirm::Display);
@@ -448,10 +450,10 @@ impl KeyParser {
         match key_code {
             KeyCode::Esc => {
                 app.event_state.set_confirm(Confirm::Confirmed);
-            },
+            }
             KeyCode::Enter => {
                 app.event_state.set_confirm(Confirm::Display);
-            },
+            }
             KeyCode::Char(c) => {
                 app.inputs.entry(k).or_insert_with(Vec::new).push(c);
                 app.cursor_position.as_mut().unwrap().push_inc(c);

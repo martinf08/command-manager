@@ -7,7 +7,7 @@ use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
 
 pub struct UiBuilder {
@@ -101,6 +101,22 @@ impl UiBuilder {
         ];
 
         Paragraph::new(text).alignment(alignment)
+    }
+
+    pub fn create_highlighted_paragraph(
+        &self,
+        title: String,
+        input: String,
+        alignment: Alignment,
+    ) -> Paragraph {
+        Paragraph::new(Span::styled(
+            input,
+            Style::default().fg(self.config.font_config.input_fg),
+        ))
+        .wrap(Wrap { trim: true })
+        .block(Block::default().title(title).borders(Borders::ALL))
+        .alignment(alignment)
+        .style(Style::default().fg(self.config.layout_config.highlight_border_fg))
     }
 }
 

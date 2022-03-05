@@ -28,6 +28,7 @@ pub struct FontConfig {
     pub highlight_modifier: Modifier,
     pub text_fg: Color,
     pub first_letter_fg: Color,
+    pub input_fg: Color,
 }
 
 impl FontConfig {
@@ -40,6 +41,7 @@ impl FontConfig {
             highlight_modifier: Modifier::BOLD,
             text_fg: Color::White,
             first_letter_fg: Color::Red,
+            input_fg: Color::Yellow,
         }
     }
 }
@@ -52,6 +54,8 @@ pub struct NameConfig {
     pub tags_title: String,
     pub highlight_symbol: String,
     pub confirm_title: String,
+    pub add_namespace_title: String,
+    pub add_command_title: String,
 }
 
 impl NameConfig {
@@ -68,6 +72,8 @@ impl NameConfig {
             tags_title: "Tags".to_string(),
             highlight_symbol: "⟩".to_string(),
             confirm_title: "Confirm".to_string(),
+            add_namespace_title: "Type the namespace name".to_string(),
+            add_command_title: "Type the command script".to_string(),
         }
     }
 }
@@ -76,6 +82,7 @@ pub struct LayoutConfig {
     pub app_block: Vec<Constraint>,
     pub main_block: Vec<Constraint>,
     pub lists_block: Vec<Constraint>,
+    pub highlight_border_fg: Color,
 }
 
 impl LayoutConfig {
@@ -92,6 +99,7 @@ impl LayoutConfig {
                 Constraint::Percentage(75),
                 Constraint::Percentage(10),
             ],
+            highlight_border_fg: Color::Green,
         }
     }
 }

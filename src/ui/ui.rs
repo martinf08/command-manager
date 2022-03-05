@@ -1,16 +1,15 @@
 use crate::app::app::App;
 
-use crate::app::event_state::{Confirm, Mode, Tab};
+use crate::app::event_state::{Confirm, Mode, SubMode, Tab};
 use crate::core::config::Config;
 use crate::ui::builder::{LayoutBuilder, UiBuilder};
-use crate::ui::utils::set_cursor_position;
+use crate::app::input::CursorPosition;
 
-use crate::widget::button::Button;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap};
 use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -52,6 +51,7 @@ where
     let mut namespaces = app.namespaces.as_ref().borrow_mut();
     let namespaces_list = ui_builder.create_list(config.name_config.namespaces_title, &namespaces);
     f.render_stateful_widget(namespaces_list, lists_block[0], &mut namespaces.state);
+    drop(namespaces);
 
     //Display commands at middle block
     let mut commands = app.commands.as_ref().borrow_mut();
@@ -62,6 +62,36 @@ where
     let mut tags = app.tags.as_ref().borrow_mut();
     let tags_list = ui_builder.create_list(config.name_config.tags_title, &tags);
     f.render_stateful_widget(tags_list, lists_block[2], &mut tags.state);
+    drop(tags);
+
+    let mut command_text = "\n".to_string();
+    if commands.state.selected().is_some() && commands.items.len() > 0 {
+        command_text.push_str(&*commands.items[commands.state.selected().unwrap()].clone());
+    }
+    drop(commands);
+
+    match app.event_state.get_sub_mode() {
+        SubMode::Namespace => {
+            let input = String::from_iter(
+                app.inputs
+                    .entry("namespace".to_string())
+                    .or_default()
+                    .clone(),
+            );
+
+            let p = ui_builder.create_highlighted_paragraph(
+                config.name_config.add_namespace_title,
+                input.clone(),
+                Alignment::Left,
+            );
+
+            CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+
+            f.render_widget(Clear, lists_block[1]);
+            f.render_widget(p, lists_block[1]);
+        }
+        _ => {}
+    }
 
     if app.event_state.get_confirm() == &Confirm::Display {
         let popup_rects = layout_builder.get_popup_rects(
@@ -75,11 +105,6 @@ where
         let p = ui_builder.get_confirm_command(Alignment::Center);
 
         f.render_widget(p, popup_rects[0]);
-    }
-
-    let mut command_text = "\n".to_string();
-    if commands.state.selected().is_some() && commands.items.len() > 0 {
-        command_text.push_str(&*commands.items[commands.state.selected().unwrap()].clone());
     }
 
     // match *app.get_mode() {

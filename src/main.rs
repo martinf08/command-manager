@@ -2,7 +2,6 @@ mod app;
 mod core;
 mod db;
 mod ui;
-mod widget;
 
 use crate::app::app::App;
 use crate::core::Engine;
