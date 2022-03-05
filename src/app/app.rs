@@ -10,6 +10,7 @@ use std::error::Error;
 use std::rc::Rc;
 
 pub struct App {
+    pub config: Config,
     pub tabs: Rc<RefCell<TabsState>>,
     pub db: Db,
     pub event_state: EventState,
@@ -34,6 +35,7 @@ impl App {
 
         Ok(App {
             tabs: Rc::new(RefCell::new(TabsState::new(&config))),
+            config,
             db,
             event_state: EventState::default(),
             inputs: HashMap::new(),

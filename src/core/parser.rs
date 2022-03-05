@@ -27,10 +27,15 @@ impl KeyParser {
             return Ok(None);
         }
 
+        if key_code == KeyCode::Esc {
+            app.event_state = EventState::default();
+            return Ok(None);
+        }
+
         match app.event_state.get_tab() {
             Tab::Tab1 => KeyParser::process_tab_1(key_code, app),
-            // Tab::Tab2 => KeyParser::process_tab_2(key_code, app),
-            // Tab::Tab3 => KeyParser::process_tab_3(key_code, app), //Todo uncomment
+            Tab::Tab2 => KeyParser::process_tab_2(key_code, app),
+            Tab::Tab3 => KeyParser::process_tab_3(key_code, app),
             _ => Ok(None),
         }
     }
@@ -40,7 +45,7 @@ impl KeyParser {
             Mode::Normal => KeyParser::process_normal_mode(key_code, app),
             Mode::Add => KeyParser::process_add_mode(key_code, app),
             Mode::Delete => KeyParser::process_delete_mode(key_code, app),
-            _ => Ok(None), //Todo remove
+            _ => Ok(None),
         }
     }
 
@@ -81,42 +86,32 @@ impl KeyParser {
             KeyCode::Down | KeyCode::Char('j') => KeyParser::move_down(app),
             KeyCode::Up | KeyCode::Char('k') => KeyParser::move_up(app),
             KeyCode::Enter | KeyCode::Char(' ') => KeyParser::enter(app),
-            KeyCode::Esc => KeyParser::esc(app),
-            // KeyCode::Char('a') => KeyParser::change_to_add_mode(app),
             KeyCode::Char('n') => KeyParser::change_to_add_namespace_mode(app),
-            KeyCode::Char('d') => KeyParser::change_to_delete_mode(app), //Todo uncomment
+            KeyCode::Char('d') => KeyParser::change_to_delete_mode(app),
             _ => Ok(None),
         }
     }
 
     fn process_add_mode(key_code: KeyCode, app: &mut App) -> ParserResult {
-        match key_code {
-            KeyCode::Esc => {
-                app.event_state.set_confirm(Confirm::Confirmed);
-                Ok(None)
-            }
-            _ => match app.event_state.get_sub_mode() {
-                SubMode::Namespace => match app.event_state.get_confirm() {
-                    Confirm::Hide => {
-                        KeyParser::input_handler(key_code, app, "namespace".to_string());
-                        Ok(None)
-                    }
-                    Confirm::Display => {
-                        KeyParser::process_add_namespace_mode_confirm(key_code, app)
-                    }
-                    _ => Ok(None),
-                },
+        match app.event_state.get_sub_mode() {
+            SubMode::Namespace => match app.event_state.get_confirm() {
+                Confirm::Hide => {
+                    KeyParser::input_handler(
+                        key_code,
+                        app,
+                        app.config.name_config.namespace.to_string(),
+                    );
+                    Ok(None)
+                }
+                Confirm::Display => KeyParser::process_add_namespace_mode_confirm(key_code, app),
                 _ => Ok(None),
             },
+            _ => Ok(None),
         }
     }
 
     fn process_add_namespace_mode_confirm(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Esc => {
-                app.event_state.set_confirm(Confirm::Confirmed);
-                Ok(None)
-            }
             KeyCode::Enter => {
                 if app.inputs.is_empty() {
                     return Ok(None);
@@ -203,12 +198,6 @@ impl KeyParser {
                     return Ok(None);
                 }
 
-                app.event_state.set_confirm(Confirm::Confirmed);
-                app.event_state.set_mode(Mode::Normal);
-
-                return Ok(None);
-            }
-            KeyCode::Esc => {
                 app.event_state.set_confirm(Confirm::Confirmed);
                 app.event_state.set_mode(Mode::Normal);
 
@@ -395,36 +384,6 @@ impl KeyParser {
         Ok(None)
     }
 
-    fn esc(app: &mut App) -> ParserResult {
-        app.event_state.set_mode(Mode::Normal);
-
-        let mut tabs = app.tabs.as_ref().borrow_mut();
-        let mut namespaces = app.namespaces.as_ref().borrow_mut();
-        let mut commands = app.commands.as_ref().borrow_mut();
-        let mut tags = app.tags.as_ref().borrow_mut();
-
-        match app.event_state.get_confirm() {
-            Confirm::Display => {
-                commands.is_selected = true;
-                tags.is_selected = true;
-
-                app.event_state.set_confirm(Confirm::Hide);
-            }
-            Confirm::Hide => {
-                commands.is_selected = false;
-                tags.is_selected = false;
-
-                namespaces.is_selected = false;
-                namespaces.unselect();
-
-                tabs.is_selected = true;
-            }
-            _ => {}
-        }
-
-        Ok(None)
-    }
-
     fn change_to_add_namespace_mode(app: &mut App) -> ParserResult {
         app.event_state = EventState::default();
         app.event_state.set_mode(Mode::Add);
@@ -448,9 +407,6 @@ impl KeyParser {
 
     fn input_handler(key_code: KeyCode, app: &mut App, k: String) -> () {
         match key_code {
-            KeyCode::Esc => {
-                app.event_state.set_confirm(Confirm::Confirmed);
-            }
             KeyCode::Enter => {
                 app.event_state.set_confirm(Confirm::Display);
             }
