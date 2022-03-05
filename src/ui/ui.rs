@@ -1,15 +1,13 @@
 use crate::app::app::App;
 
-use crate::app::event_state::{Confirm, Mode, SubMode, Tab};
+use crate::app::event_state::{Confirm, SubMode, Tab};
 use crate::app::input::CursorPosition;
-use crate::core::config::Config;
 use crate::ui::builder::{LayoutBuilder, UiBuilder};
 
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap};
+use tui::layout::{Alignment, Direction, Rect};
+use tui::style::{Color, Style};
+use tui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
 use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -154,10 +152,12 @@ fn display_lists(app: &mut App, f: &mut Frame<impl Backend>, lists_block: &Vec<R
         ),
     ];
 
-    list.into_iter().enumerate().for_each(|(i, (mut list, title))| {
-        let item_list = ui_builder.create_list(title.clone(), &list);
-        f.render_stateful_widget(item_list, lists_block[i], &mut list.state);
-    });
+    list.into_iter()
+        .enumerate()
+        .for_each(|(i, (mut list, title))| {
+            let item_list = ui_builder.create_list(title.clone(), &list);
+            f.render_stateful_widget(item_list, lists_block[i], &mut list.state);
+        });
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)

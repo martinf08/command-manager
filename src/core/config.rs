@@ -50,6 +50,7 @@ pub struct NameConfig {
     pub app_title: String,
     pub namespace: String,
     pub command: String,
+    pub tag: String,
     pub tabs_title: Vec<String>,
     pub namespaces_title: String,
     pub commands_title: String,
@@ -66,6 +67,7 @@ impl NameConfig {
             app_title: "Command Manager".to_string(),
             namespace: "namespace".to_string(),
             command: "command".to_string(),
+            tag: "tag".to_string(),
             tabs_title: vec![
                 "Tab 1".to_string(),
                 "Tab 2".to_string(),

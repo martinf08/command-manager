@@ -87,6 +87,7 @@ impl KeyParser {
             KeyCode::Up | KeyCode::Char('k') => KeyParser::move_up(app),
             KeyCode::Enter | KeyCode::Char(' ') => KeyParser::enter(app),
             KeyCode::Char('n') => KeyParser::change_to_add_namespace_mode(app),
+            KeyCode::Char('a') => KeyParser::change_to_add_command_mode(app),
             KeyCode::Char('d') => KeyParser::change_to_delete_mode(app),
             _ => Ok(None),
         }
@@ -106,13 +107,59 @@ impl KeyParser {
                 Confirm::Display => KeyParser::process_add_namespace_mode_confirm(key_code, app),
                 _ => Ok(None),
             },
+            SubMode::Command => match app.event_state.get_event_type() {
+                EventType::Namespace => {
+                    if app.event_state.get_confirm() == &Confirm::Display {
+                        app.event_state.set_event_type(EventType::Tag);
+                        app.event_state.set_confirm(Confirm::Hide);
+
+                        return Ok(None)
+                    }
+
+                    KeyParser::input_handler(
+                        key_code,
+                        app,
+                        app.config.name_config.command.to_string(),
+                    );
+
+                    Ok(None)
+                },
+                EventType::Tag => {
+                    if app.event_state.get_confirm() == &Confirm::Display {
+                        KeyParser::process_add_command_mode_confirm(key_code, app);
+
+                        return Ok(None)
+                    }
+
+                    KeyParser::input_handler(
+                        key_code,
+                        app,
+                        app.config.name_config.tag.to_string(),
+                    );
+
+                    Ok(None)
+                },
+                _ => Ok(None),
+            },
+            _ => Ok(None),
+        }
+    }
+
+    fn process_add_command_mode_confirm(key_code: KeyCode, app: &mut App) -> ParserResult {
+        match key_code {
+            KeyCode::Enter | KeyCode::Char(' ') => {
+
+                //Todo
+
+                Ok(None)
+            },
             _ => Ok(None),
         }
     }
 
     fn process_add_namespace_mode_confirm(key_code: KeyCode, app: &mut App) -> ParserResult {
         match key_code {
-            KeyCode::Enter => {
+            KeyCode::Enter | KeyCode::Char(' ') => {
                 if app.inputs.is_empty() {
                     return Ok(None);
                 }
@@ -389,6 +436,15 @@ impl KeyParser {
         app.event_state.set_mode(Mode::Add);
         app.event_state.set_sub_mode(SubMode::Namespace);
         app.event_state.set_event_type(EventType::Namespace);
+
+        Ok(None)
+    }
+
+    fn change_to_add_command_mode(app: &mut App) -> ParserResult {
+        app.event_state = EventState::default();
+        app.event_state.set_mode(Mode::Add);
+        app.event_state.set_sub_mode(SubMode::Command);
+        app.event_state.set_event_type(EventType::Command);
 
         Ok(None)
     }
