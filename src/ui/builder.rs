@@ -1,11 +1,11 @@
 use crate::app::state::{StatefulList, TabsState};
 use crate::core::config::Config;
 
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs};
 use tui::Frame;
