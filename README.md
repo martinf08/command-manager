@@ -10,7 +10,7 @@
 
 ### Add
 
-- namespace : a
+- namespace : n
 
 Select namespace with navigation before
 - command : c
