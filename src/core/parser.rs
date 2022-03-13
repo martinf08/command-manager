@@ -1,8 +1,10 @@
 use crate::app::app::App;
 use crate::app::event_state::{Confirm, EventState, EventType, Mode, SubMode, Tab};
-use crate::app::state::State;
+use crate::app::state::{State, StatefulList};
 use crossterm::event::{KeyCode, KeyEvent};
+use std::cell::RefCell;
 use std::error::Error;
+use std::rc::Rc;
 
 pub struct KeyParser;
 
@@ -87,7 +89,7 @@ impl KeyParser {
             KeyCode::Up | KeyCode::Char('k') => KeyParser::move_up(app),
             KeyCode::Enter | KeyCode::Char(' ') => KeyParser::enter(app),
             KeyCode::Char('n') => KeyParser::change_to_add_namespace_mode(app),
-            KeyCode::Char('a') => KeyParser::change_to_add_command_mode(app),
+            KeyCode::Char('c') => KeyParser::change_to_add_command_mode(app),
             KeyCode::Char('d') => KeyParser::change_to_delete_mode(app),
             _ => Ok(None),
         }
@@ -108,37 +110,42 @@ impl KeyParser {
                 _ => Ok(None),
             },
             SubMode::Command => match app.event_state.get_event_type() {
-                EventType::Namespace => {
+                EventType::Command => {
+                    match app.event_state.get_confirm() {
+                        Confirm::Display => {
+                            KeyParser::input_handler(
+                                key_code,
+                                app,
+                                app.config.name_config.tag.to_string(),
+                            );
+                        }
+                        _ => {
+                            KeyParser::input_handler(
+                                key_code,
+                                app,
+                                app.config.name_config.command.to_string(),
+                            );
+                        }
+                    }
+
                     if app.event_state.get_confirm() == &Confirm::Display {
                         app.event_state.set_event_type(EventType::Tag);
                         app.event_state.set_confirm(Confirm::Hide);
-
-                        return Ok(None)
                     }
 
-                    KeyParser::input_handler(
-                        key_code,
-                        app,
-                        app.config.name_config.command.to_string(),
-                    );
-
-                    Ok(None)
-                },
+                    return Ok(None);
+                }
                 EventType::Tag => {
                     if app.event_state.get_confirm() == &Confirm::Display {
-                        KeyParser::process_add_command_mode_confirm(key_code, app);
+                        KeyParser::process_add_command_mode_confirm(key_code, app)?;
 
-                        return Ok(None)
+                        return Ok(None);
                     }
 
-                    KeyParser::input_handler(
-                        key_code,
-                        app,
-                        app.config.name_config.tag.to_string(),
-                    );
+                    KeyParser::input_handler(key_code, app, app.config.name_config.tag.to_string());
 
                     Ok(None)
-                },
+                }
                 _ => Ok(None),
             },
             _ => Ok(None),
@@ -146,15 +153,40 @@ impl KeyParser {
     }
 
     fn process_add_command_mode_confirm(key_code: KeyCode, app: &mut App) -> ParserResult {
+        let namespace = app.namespaces.as_ref().borrow().current_item().clone();
+
         match key_code {
             KeyCode::Enter | KeyCode::Char(' ') => {
-
-                //Todo
-
-                Ok(None)
-            },
-            _ => Ok(None),
+                app.db
+                    .add_command_and_tag(
+                        Some(&String::from_iter(
+                            app.inputs
+                                .get(&app.config.name_config.command)
+                                .unwrap()
+                                .clone(),
+                        )),
+                        Some(&String::from_iter(
+                            app.inputs.get(&app.config.name_config.tag).unwrap().clone(),
+                        )),
+                        &namespace,
+                    )
+                    .expect("Failed to add command and tag");
+            }
+            _ => {}
         }
+
+        let (new_commands, new_tags) = app
+            .db
+            .get_commands_and_tags(Some(namespace))
+            .expect("Failed to get commands and tags");
+
+        app.commands = Rc::new(RefCell::new(StatefulList::with_items(new_commands)));
+        app.tags = Rc::new(RefCell::new(StatefulList::with_items(new_tags)));
+        app.cursor_position = None;
+
+        app.event_state = EventState::default();
+
+        Ok(None)
     }
 
     fn process_add_namespace_mode_confirm(key_code: KeyCode, app: &mut App) -> ParserResult {
@@ -436,6 +468,8 @@ impl KeyParser {
         app.event_state.set_mode(Mode::Add);
         app.event_state.set_sub_mode(SubMode::Namespace);
         app.event_state.set_event_type(EventType::Namespace);
+        app.inputs.clear();
+        app.cursor_position = None;
 
         Ok(None)
     }
@@ -445,6 +479,8 @@ impl KeyParser {
         app.event_state.set_mode(Mode::Add);
         app.event_state.set_sub_mode(SubMode::Command);
         app.event_state.set_event_type(EventType::Command);
+        app.inputs.clear();
+        app.cursor_position = None;
 
         Ok(None)
     }
@@ -477,46 +513,4 @@ impl KeyParser {
             _ => (),
         }
     }
-
-    // fn process_add_command(key_code: KeyCode, app: &mut App) -> ParserResult {
-    //     KeyParser::input_handler(key_code, app);
-    //
-    //     if key_code == KeyCode::Enter {
-    //         if app.add.input.is_empty() {
-    //             return Ok(None);
-    //         }
-    //
-    //         match app.add.input_mode {
-    //             Some(InputMode::Command) => {
-    //                 app.add.input_command = Some(app.add.input.clone());
-    //                 app.add.input.clear();
-    //                 app.add.input_mode = Some(InputMode::Tag);
-    //             }
-    //             Some(InputMode::Tag) => {
-    //                 app.add.input_mode = None;
-    //                 app.db
-    //                     .add_command_and_tag(
-    //                         app.add.input_command.as_ref(),
-    //                         &app.add.input,
-    //                         &app.namespaces.current_item(),
-    //                     )
-    //                     .expect("Failed to add command and tag");
-    //
-    //                 KeyParser::clear_mode(app);
-    //             }
-    //             _ => (),
-    //         }
-    //
-    //         let (commands, tags) = app
-    //             .db
-    //             .get_commands_and_tags(Some(app.namespaces.current_item().clone()))
-    //             .expect("Failed to get commands and tags");
-    //
-    //         app.commands = StatefulList::with_items(commands);
-    //         app.tags = StatefulList::with_items(tags);
-    //         app.cursor_position = None;
-    //     }
-    //
-    //     Ok(None)
-    // }
 }

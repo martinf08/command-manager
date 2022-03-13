@@ -59,6 +59,7 @@ pub struct NameConfig {
     pub confirm_title: String,
     pub add_namespace_title: String,
     pub add_command_title: String,
+    pub add_tag_title: String,
 }
 
 impl NameConfig {
@@ -80,6 +81,7 @@ impl NameConfig {
             confirm_title: "Confirm".to_string(),
             add_namespace_title: "Type the namespace name".to_string(),
             add_command_title: "Type the command script".to_string(),
+            add_tag_title: "Type the tag name".to_string(),
         }
     }
 }

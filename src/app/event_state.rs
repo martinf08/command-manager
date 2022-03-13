@@ -12,6 +12,7 @@ pub enum SubMode {
     Quit,
 }
 
+#[derive(PartialEq)]
 pub enum EventType {
     Command,
     Namespace,

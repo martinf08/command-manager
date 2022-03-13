@@ -1,9 +1,10 @@
 use crate::app::app::App;
 
-use crate::app::event_state::{Confirm, SubMode, Tab};
+use crate::app::event_state::{Confirm, EventType, SubMode, Tab};
 use crate::app::input::CursorPosition;
 use crate::ui::builder::{LayoutBuilder, UiBuilder};
 
+use crate::app::event_state::SubMode::Command;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Direction, Rect};
 use tui::style::{Color, Style};
@@ -75,41 +76,89 @@ where
             f.render_widget(Clear, lists_block[1]);
             f.render_widget(p, lists_block[1]);
         }
-        SubMode::Command => {
-            let input = String::from_iter(
-                app.inputs
-                    .entry(app.config.name_config.command.to_string())
-                    .or_default()
-                    .clone(),
-            );
+        SubMode::Command => match app.event_state.get_event_type() {
+            EventType::Command => {
+                let input = String::from_iter(
+                    app.inputs
+                        .entry(app.config.name_config.command.to_string())
+                        .or_default()
+                        .clone(),
+                );
 
-            let p = ui_builder.create_highlighted_paragraph(
-                app.config.name_config.add_command_title.clone(),
-                input.clone(),
-                Alignment::Left,
-            );
+                let p = ui_builder.create_highlighted_paragraph(
+                    app.config.name_config.add_command_title.clone(),
+                    input.clone(),
+                    Alignment::Left,
+                );
 
-            CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+                CursorPosition::set_cursor_position(app, f, lists_block[1], input);
 
-            f.render_widget(Clear, lists_block[1]);
-            f.render_widget(p, lists_block[1]);
-        }
+                f.render_widget(Clear, lists_block[1]);
+                f.render_widget(p, lists_block[1]);
+            }
+            EventType::Tag => {
+                let input = String::from_iter(
+                    app.inputs
+                        .entry(app.config.name_config.tag.to_string())
+                        .or_default()
+                        .clone(),
+                );
+
+                let p = ui_builder.create_highlighted_paragraph(
+                    app.config.name_config.add_tag_title.clone(),
+                    input.clone(),
+                    Alignment::Left,
+                );
+
+                if input.is_empty() {
+                    app.cursor_position = None;
+                }
+                CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+
+                f.render_widget(Clear, lists_block[1]);
+                f.render_widget(p, lists_block[1]);
+            }
+            _ => {}
+        },
         _ => {}
     }
 
     // Confirm popup
     if app.event_state.get_confirm() == &Confirm::Display {
-        let popup_rects = layout_builder.get_popup_rects(
-            app.config.name_config.confirm_title.clone(),
-            f,
-            lists_block[1],
-            Some(3),
-            None,
-        );
+        match app.event_state.get_event_type() {
+            EventType::Command => {
+                let input = String::from_iter(
+                    app.inputs
+                        .entry(app.config.name_config.tag.to_string())
+                        .or_default()
+                        .clone(),
+                );
 
-        let p = ui_builder.get_confirm_command(Alignment::Center);
+                let p = ui_builder.create_highlighted_paragraph(
+                    app.config.name_config.add_tag_title.clone(),
+                    input.clone(),
+                    Alignment::Left,
+                );
 
-        f.render_widget(p, popup_rects[0]);
+                CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+
+                f.render_widget(Clear, lists_block[1]);
+                f.render_widget(p, lists_block[1]);
+            }
+            _ => {
+                let popup_rects = layout_builder.get_popup_rects(
+                    app.config.name_config.confirm_title.clone(),
+                    f,
+                    lists_block[1],
+                    Some(3),
+                    None,
+                );
+
+                let p = ui_builder.get_confirm_command(Alignment::Center);
+
+                f.render_widget(p, popup_rects[0]);
+            }
+        }
     }
 
     //Command details

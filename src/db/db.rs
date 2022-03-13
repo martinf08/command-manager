@@ -179,7 +179,7 @@ impl Db {
     pub fn add_command_and_tag(
         &self,
         command: Option<&String>,
-        tag: &String,
+        tag: Option<&String>,
         namespace: &String,
     ) -> Result<(), Box<dyn Error>> {
         let mut stmt = self.conn.prepare(
@@ -196,7 +196,7 @@ impl Db {
         VALUES (:tag, (SELECT id FROM commands WHERE value = :command));",
         )?;
 
-        stmt.execute([tag, command.unwrap()])?;
+        stmt.execute([tag, command])?;
         Ok(())
     }
 
