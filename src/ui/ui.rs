@@ -1,50 +1,32 @@
-use crate::app::add::{AddType, InputMode};
-use crate::app::app::{App, Mode};
+use crate::app::app::App;
 
-use crate::ui::utils::{
-    get_border_style_from_selected_status, get_highlight_style, get_popup_layout,
-    set_cursor_position,
-};
-use crate::widget::button::Button;
+use crate::app::event_state::{Confirm, EventType, SubMode, Tab};
+use crate::app::input::CursorPosition;
+use crate::ui::builder::{LayoutBuilder, UiBuilder};
+
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap};
+use tui::layout::{Alignment, Direction, Rect};
+use tui::style::{Color, Style};
+use tui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
 use tui::Frame;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    let chunks = Layout::default()
-        .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
+    let ui_builder = UiBuilder::new();
+    let layout_builder = LayoutBuilder::new();
+
+    let chunks = layout_builder
+        .create(
+            app.config.layout_config.app_block.clone(),
+            Direction::Vertical,
+        )
         .split(f.size());
 
-    let titles = app
-        .tabs
-        .titles
-        .iter()
-        .map(|t| {
-            let (first, rest) = t.split_at(1);
-            Spans::from(vec![
-                Span::styled(first, Style::default().fg(Color::Red)),
-                Span::styled(rest, Style::default().fg(Color::White)),
-            ])
-        })
-        .collect::<Vec<Spans>>();
-
-    let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Tabs"))
-        .select(app.tabs.index)
-        .style(get_border_style_from_selected_status(
-            app.tabs.current_selected,
-        ))
-        .highlight_style(get_highlight_style());
-
+    // Display tabs
+    let tabs = ui_builder.create_tabs(&app.tabs);
     f.render_widget(tabs, chunks[0]);
-    match app.tabs.index {
-        0 => draw_first_tab(f, chunks[1], app),
-        1 => draw_second_tab(f, chunks[1], app),
-        2 => draw_second_tab(f, chunks[1], app),
-        _ => unreachable!(),
+
+    match app.event_state.get_tab() {
+        Tab::Tab1 => draw_first_tab(f, chunks[1], app),
     };
 }
 
@@ -52,172 +34,137 @@ fn draw_first_tab<B>(f: &mut Frame<B>, rect: Rect, app: &mut App)
 where
     B: Backend,
 {
-    let sub_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage(50),
-                Constraint::Percentage(20),
-                Constraint::Percentage(30),
-            ]
-            .as_ref(),
+    let ui_builder = UiBuilder::new();
+    let layout_builder = LayoutBuilder::new();
+
+    let main_block = layout_builder
+        .create(
+            app.config.layout_config.main_block.clone(),
+            Direction::Vertical,
         )
         .split(rect);
 
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage(15),
-                Constraint::Percentage(75),
-                Constraint::Percentage(10),
-            ]
-            .as_ref(),
+    let lists_block = layout_builder
+        .create(
+            app.config.layout_config.lists_block.clone(),
+            Direction::Horizontal,
         )
-        .split(sub_chunks[0]);
+        .split(main_block[0]);
 
-    let bloc = Block::default().title("namespaces").borders(Borders::ALL);
+    display_lists(app, f, &lists_block);
 
-    f.render_widget(bloc, chunks[0]);
+    match app.event_state.get_sub_mode() {
+        SubMode::Namespace => {
+            let input = String::from_iter(
+                app.inputs
+                    .entry(app.config.name_config.namespace.to_string())
+                    .or_default()
+                    .clone(),
+            );
 
-    let items = app
-        .namespaces
-        .items
-        .iter()
-        .filter(|item| !item.trim().is_empty())
-        .map(|item| ListItem::new(item.as_str()).style(Style::default().fg(Color::White)))
-        .collect::<Vec<ListItem>>();
+            let p = ui_builder.create_highlighted_paragraph(
+                app.config.name_config.add_namespace_title.clone(),
+                input.clone(),
+                Alignment::Left,
+            );
 
-    let list = List::new(items)
-        .block(Block::default().title("Namespaces").borders(Borders::ALL))
-        .style(get_border_style_from_selected_status(
-            app.namespaces.current_selected,
-        ))
-        .highlight_style(get_highlight_style())
-        .highlight_symbol("⟩");
+            CursorPosition::set_cursor_position(app, f, lists_block[1], input);
 
-    f.render_stateful_widget(list, chunks[0], &mut app.namespaces.state);
-
-    let vec_to_style = |v: Vec<String>| -> Vec<ListItem> {
-        v.into_iter()
-            .map(|v| ListItem::new(v).style(Style::default().fg(Color::White)))
-            .collect::<Vec<ListItem>>()
-    };
-
-    let commands = app.commands.items.clone();
-    let command_items = vec_to_style(commands);
-
-    f.render_stateful_widget(
-        List::new(command_items)
-            .block(Block::default().title("Commands").borders(Borders::ALL))
-            .style(get_border_style_from_selected_status(
-                app.commands.current_selected,
-            ))
-            .highlight_style(get_highlight_style())
-            .highlight_symbol("⟩"),
-        chunks[1],
-        &mut app.commands.state,
-    );
-
-    let tags = app.tags.items.clone();
-    let tag_items = vec_to_style(tags);
-
-    f.render_stateful_widget(
-        List::new(tag_items)
-            .block(Block::default().title("Tags").borders(Borders::ALL))
-            .style(get_border_style_from_selected_status(
-                app.commands.current_selected,
-            ))
-            .highlight_style(get_highlight_style()),
-        chunks[2],
-        &mut app.tags.state,
-    );
-
-    if app.show_command_confirmation {
-        let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
-
-        let text = vec![
-            Spans::from(Span::styled(
-                app.confirmation_popup.message,
-                Style::default().fg(Color::White),
-            )),
-            Spans::from(Span::raw("")),
-            Spans::from(Span::styled(
-                app.confirmation_popup.confirm,
-                Style::default()
-                    .add_modifier(Modifier::BOLD)
-                    .fg(Color::Red)
-                    .bg(Color::Gray),
-            )),
-        ];
-
-        let p = Paragraph::new(text).alignment(Alignment::Center);
-
-        f.render_widget(p, layout[0]);
-    }
-
-    let mut command_text = "\n".to_string();
-    if app.commands.state.selected().is_some() && app.commands.items.len() > 0 {
-        command_text.push_str(&*app.commands.items[app.commands.state.selected().unwrap()].clone());
-    }
-
-    match *app.get_mode() {
-        Mode::Add => match &app.add.add_type {
-            Some(t) => match t {
-                AddType::Command => match app.add.input_mode {
-                    Some(InputMode::Command) | Some(InputMode::Tag) => {
-                        if app.namespaces.state.selected().is_some() {
-                            if app.add.input_mode == Some(InputMode::Command) {
-                                command_text.push_str("Type the command");
-                            } else {
-                                command_text.push_str("Type the tag");
-                            }
-                            display_add_input_area(app, f, chunks[1])
-                        }
-                    }
-                    _ => (),
-                },
-                AddType::Namespace => {
-                    if let Some(InputMode::Namespace) = app.add.input_mode {
-                        display_add_input_area(app, f, chunks[1])
-                    }
-                }
-            },
-            None => {
-                display_add_type_selector(f, chunks[1]);
-                command_text =
-                    "Caution: Namespace must be selected before adding a command.".to_string();
-            }
-        },
-        Mode::Delete => {
-            if app.show_delete_confirmation
-                && (app.commands.state.selected().is_some()
-                    || app.namespaces.state.selected().is_some())
-            {
-                let layout = get_popup_layout("Confirm".to_string(), f, chunks[1], Some(3), None);
-
-                let text = vec![
-                    Spans::from(Span::styled(
-                        app.confirmation_popup.message,
-                        Style::default().fg(Color::White),
-                    )),
-                    Spans::from(Span::raw("")),
-                    Spans::from(Span::styled(
-                        app.confirmation_popup.confirm,
-                        Style::default()
-                            .add_modifier(Modifier::BOLD)
-                            .fg(Color::Red)
-                            .bg(Color::Gray),
-                    )),
-                ];
-
-                let p = Paragraph::new(text).alignment(Alignment::Center);
-
-                f.render_widget(p, layout[0]);
-            }
+            f.render_widget(Clear, lists_block[1]);
+            f.render_widget(p, lists_block[1]);
         }
+        SubMode::Command => match app.event_state.get_event_type() {
+            EventType::Command => {
+                let input = String::from_iter(
+                    app.inputs
+                        .entry(app.config.name_config.command.to_string())
+                        .or_default()
+                        .clone(),
+                );
+
+                let p = ui_builder.create_highlighted_paragraph(
+                    app.config.name_config.add_command_title.clone(),
+                    input.clone(),
+                    Alignment::Left,
+                );
+
+                CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+
+                f.render_widget(Clear, lists_block[1]);
+                f.render_widget(p, lists_block[1]);
+            }
+            EventType::Tag => {
+                let input = String::from_iter(
+                    app.inputs
+                        .entry(app.config.name_config.tag.to_string())
+                        .or_default()
+                        .clone(),
+                );
+
+                let p = ui_builder.create_highlighted_paragraph(
+                    app.config.name_config.add_tag_title.clone(),
+                    input.clone(),
+                    Alignment::Left,
+                );
+
+                if input.is_empty() {
+                    app.cursor_position = None;
+                }
+                CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+
+                f.render_widget(Clear, lists_block[1]);
+                f.render_widget(p, lists_block[1]);
+            }
+            _ => {}
+        },
         _ => {}
     }
+
+    // Confirm popup
+    if app.event_state.get_confirm() == &Confirm::Display {
+        match app.event_state.get_event_type() {
+            EventType::Command => {
+                let input = String::from_iter(
+                    app.inputs
+                        .entry(app.config.name_config.tag.to_string())
+                        .or_default()
+                        .clone(),
+                );
+
+                let p = ui_builder.create_highlighted_paragraph(
+                    app.config.name_config.add_tag_title.clone(),
+                    input.clone(),
+                    Alignment::Left,
+                );
+
+                CursorPosition::set_cursor_position(app, f, lists_block[1], input);
+
+                f.render_widget(Clear, lists_block[1]);
+                f.render_widget(p, lists_block[1]);
+            }
+            _ => {
+                let popup_rects = layout_builder.get_popup_rects(
+                    app.config.name_config.confirm_title.clone(),
+                    f,
+                    lists_block[1],
+                    Some(3),
+                    None,
+                );
+
+                let p = ui_builder.get_confirm_command(Alignment::Center);
+
+                f.render_widget(p, popup_rects[0]);
+            }
+        }
+    }
+
+    //Command details
+    let commands = app.commands.as_ref().borrow_mut();
+    let mut command_text = "\n".to_string();
+    if commands.state.selected().is_some() && commands.items.len() > 0 {
+        command_text.push_str(&*commands.items[commands.state.selected().unwrap()].clone());
+    }
+    drop(commands);
 
     let detail_command_paragraph = Paragraph::new(command_text)
         .alignment(Alignment::Left)
@@ -230,61 +177,31 @@ where
                 .style(Style::default().fg(Color::White)),
         );
 
-    f.render_widget(detail_command_paragraph, sub_chunks[1]);
+    f.render_widget(detail_command_paragraph, main_block[1]);
 }
 
-fn display_add_input_area(app: &mut App, f: &mut Frame<impl Backend>, chunk: Rect) {
-    let title = match &app.add.add_type {
-        Some(t) => match t {
-            AddType::Command => "Command".to_string(),
-            AddType::Namespace => "Namespace".to_string(),
-        },
-        None => "".to_string(),
-    };
+fn display_lists(app: &mut App, f: &mut Frame<impl Backend>, lists_block: &Vec<Rect>) {
+    let ui_builder = UiBuilder::new();
 
-    let rects = get_popup_layout(title, f, chunk, None, Some((100, 100)));
+    let list = vec![
+        (
+            app.namespaces.as_ref().borrow_mut(),
+            app.config.name_config.namespaces_title.to_string(),
+        ),
+        (
+            app.commands.as_ref().borrow_mut(),
+            app.config.name_config.commands_title.to_string(),
+        ),
+        (
+            app.tags.as_ref().borrow_mut(),
+            app.config.name_config.tags_title.to_string(),
+        ),
+    ];
 
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(100)].as_ref())
-        .margin(1)
-        .split(rects[0]);
-
-    let p = Paragraph::new(app.add.input.clone())
-        .block(Block::default().style(Style::default().fg(Color::White)))
-        .style(Style::default().fg(Color::Yellow))
-        .wrap(Wrap { trim: true });
-
-    set_cursor_position(app, f, chunks[0], app.add.input.clone());
-
-    f.render_widget(p, chunks[0]);
-}
-
-fn display_add_type_selector(f: &mut Frame<impl Backend>, rect: Rect) {
-    let rects = get_popup_layout("Element to add".to_string(), f, rect, Some(3), None);
-
-    let layout = Layout::default()
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .direction(Direction::Horizontal)
-        .split(rects[0]);
-
-    let command = Button::new("Command")
-        .style(Style::default().fg(Color::Red))
-        .alignment(Alignment::Center);
-
-    let namespace = Button::new("Namespace")
-        .style(Style::default().fg(Color::White))
-        .alignment(Alignment::Center);
-
-    f.render_widget(command, layout[0]);
-    f.render_widget(namespace, layout[1]);
-}
-
-fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
-where
-    B: Backend,
-{
-    let bloc = Block::default().title("Inner 2").borders(Borders::ALL);
-
-    f.render_widget(bloc, rect);
+    list.into_iter()
+        .enumerate()
+        .for_each(|(i, (mut list, title))| {
+            let item_list = ui_builder.create_list(title.clone(), &list);
+            f.render_stateful_widget(item_list, lists_block[i], &mut list.state);
+        });
 }

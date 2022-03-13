@@ -1,15 +1,19 @@
 use crate::core::parser::{KeyParser, ParserResult};
 use crate::ui::ui;
 use crate::App;
+use std::io::Stdout;
 
+use crate::app::event_state::{Confirm, EventState};
 use crossterm::event;
 use crossterm::event::Event;
 use std::time::Duration;
-use tui::backend::Backend;
+use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> ParserResult {
-    app.set_current_selected_tab(true);
+pub fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> ParserResult {
+    let mut tabs = app.tabs.as_ref().borrow_mut();
+    tabs.is_selected = true;
+    drop(tabs);
 
     loop {
         if app.quit {
@@ -19,6 +23,10 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> ParserRe
         terminal.draw(|f| ui(f, &mut app))?;
 
         if event::poll(Duration::from_millis(100))? {
+            if app.event_state.get_confirm() == &Confirm::Confirmed {
+                app.event_state = EventState::default();
+            }
+
             if let Event::Key(key) = event::read()? {
                 let result = KeyParser::parse_event(key, &mut app)?;
 
