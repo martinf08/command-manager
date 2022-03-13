@@ -18,7 +18,7 @@ Select namespace with navigation before
 ### Delete
 
 Select namespace or command with navigation before
-- command : d
+- d
 
 ### Validation
 - Enter or Space
