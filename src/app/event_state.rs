@@ -9,7 +9,6 @@ pub enum SubMode {
     Command,
     Namespace,
     None,
-    Quit,
 }
 
 #[derive(PartialEq)]
@@ -29,8 +28,6 @@ pub enum Confirm {
 
 pub enum Tab {
     Tab1,
-    Tab2,
-    Tab3,
 }
 
 pub struct EventState {
@@ -88,9 +85,5 @@ impl EventState {
 
     pub fn set_confirm(&mut self, confirm: Confirm) {
         self.confirm = confirm;
-    }
-
-    pub fn set_tab(&mut self, tab: Tab) {
-        self.tab = tab;
     }
 }

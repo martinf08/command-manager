@@ -36,9 +36,6 @@ impl KeyParser {
 
         match app.event_state.get_tab() {
             Tab::Tab1 => KeyParser::process_tab_1(key_code, app),
-            Tab::Tab2 => KeyParser::process_tab_2(key_code, app),
-            Tab::Tab3 => KeyParser::process_tab_3(key_code, app),
-            _ => Ok(None),
         }
     }
 
@@ -47,37 +44,6 @@ impl KeyParser {
             Mode::Normal => KeyParser::process_normal_mode(key_code, app),
             Mode::Add => KeyParser::process_add_mode(key_code, app),
             Mode::Delete => KeyParser::process_delete_mode(key_code, app),
-            _ => Ok(None),
-        }
-    }
-
-    fn process_tab_2(key_code: KeyCode, app: &mut App) -> ParserResult {
-        let mut tabs = app.tabs.as_ref().borrow_mut();
-        match key_code {
-            KeyCode::Right | KeyCode::Char('l') => {
-                tabs.next();
-                Ok(None)
-            }
-            KeyCode::Left | KeyCode::Char('h') => {
-                tabs.previous();
-                Ok(None)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn process_tab_3(key_code: KeyCode, app: &mut App) -> ParserResult {
-        let mut tabs = app.tabs.as_ref().borrow_mut();
-        match key_code {
-            KeyCode::Right | KeyCode::Char('l') => {
-                tabs.next();
-                Ok(None)
-            }
-            KeyCode::Left | KeyCode::Char('h') => {
-                tabs.previous();
-                Ok(None)
-            }
-            _ => Ok(None),
         }
     }
 

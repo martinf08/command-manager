@@ -14,9 +14,7 @@ pub struct UiBuilder {
     config: Config,
 }
 
-pub struct LayoutBuilder {
-    config: Config,
-}
+pub struct LayoutBuilder;
 
 impl UiBuilder {
     pub fn new() -> Self {
@@ -122,9 +120,7 @@ impl UiBuilder {
 
 impl LayoutBuilder {
     pub fn new() -> Self {
-        LayoutBuilder {
-            config: Config::new(),
-        }
+        Self
     }
 
     pub fn create(&self, constraints: Vec<Constraint>, direction: Direction) -> Layout {

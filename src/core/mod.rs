@@ -6,7 +6,7 @@ use crossterm::terminal::{
 };
 use std::error::Error;
 use std::io;
-use tui::backend::{Backend, CrosstermBackend};
+use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
 mod cmd;

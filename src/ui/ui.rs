@@ -4,7 +4,6 @@ use crate::app::event_state::{Confirm, EventType, SubMode, Tab};
 use crate::app::input::CursorPosition;
 use crate::ui::builder::{LayoutBuilder, UiBuilder};
 
-use crate::app::event_state::SubMode::Command;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Direction, Rect};
 use tui::style::{Color, Style};
@@ -28,8 +27,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     match app.event_state.get_tab() {
         Tab::Tab1 => draw_first_tab(f, chunks[1], app),
-        Tab::Tab2 => draw_second_tab(f, chunks[1], app),
-        Tab::Tab3 => draw_second_tab(f, chunks[1], app),
     };
 }
 
@@ -207,13 +204,4 @@ fn display_lists(app: &mut App, f: &mut Frame<impl Backend>, lists_block: &Vec<R
             let item_list = ui_builder.create_list(title.clone(), &list);
             f.render_stateful_widget(item_list, lists_block[i], &mut list.state);
         });
-}
-
-fn draw_second_tab<B>(f: &mut Frame<B>, rect: Rect, _app: &mut App)
-where
-    B: Backend,
-{
-    let bloc = Block::default().title("Inner 2").borders(Borders::ALL);
-
-    f.render_widget(bloc, rect);
 }

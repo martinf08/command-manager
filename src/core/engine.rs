@@ -7,13 +7,10 @@ use crate::app::event_state::{Confirm, EventState};
 use crossterm::event;
 use crossterm::event::Event;
 use std::time::Duration;
-use tui::backend::{Backend, CrosstermBackend};
+use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
-pub fn run_app(
-    mut terminal: &mut Terminal<CrosstermBackend<Stdout>>,
-    mut app: App,
-) -> ParserResult {
+pub fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> ParserResult {
     let mut tabs = app.tabs.as_ref().borrow_mut();
     tabs.is_selected = true;
     drop(tabs);

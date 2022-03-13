@@ -1,4 +1,3 @@
-use std::alloc::Layout;
 use tui::layout::Constraint;
 use tui::style::{Color, Modifier};
 
@@ -104,8 +103,8 @@ impl LayoutConfig {
             ],
             lists_block: vec![
                 Constraint::Percentage(15),
-                Constraint::Percentage(75),
-                Constraint::Percentage(10),
+                Constraint::Percentage(70),
+                Constraint::Percentage(15),
             ],
             highlight_border_fg: Color::Green,
         }
